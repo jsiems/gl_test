@@ -5,11 +5,18 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
+void error_callback(int code, const char *err_str);
 
 int main() {
     printf("Hello, World!\n");
 
-    glfwInit();
+    glfwSetErrorCallback(error_callback);
+
+    if(!glfwInit()) {
+        printf("error initializing GLFW\n");
+        return -1;
+    }
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -53,4 +60,8 @@ void processInput(GLFWwindow *window) {
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void error_callback(int code, const char *err_str) {
+    printf("GLFW error: \n\tcode: 0x%x\n\t%s\n", code, err_str);
 }
