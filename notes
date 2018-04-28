@@ -5,7 +5,7 @@ gcc test.c glad.c -o test -I ./include/ -L ./include/ -lglfw3 -lGL -lX11 -lpthre
 
 
 Full command WINDOWS:
-gcc .\test.c .\glad.c -o test -Iinclude -Linclude -lglfw3 -ldgi32 -lopengl32
+gcc .\test.c .\glad.c -o test -Iinclude -Linclude -lglfw3 -lgdi32 -lopengl32
 
 IMPORTANT - there is a big difference between -l and -L !!!!!! difference needs to be known!!!! do the changes to the windows system!!!
 
