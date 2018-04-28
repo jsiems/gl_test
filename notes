@@ -1,0 +1,10 @@
+linking options that should help: -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lXxf86vm -lXinerama -lXcursor -lrt
+
+Full command:
+gcc test.c glad.c -o test -I ./include/ -L ./include/ -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lXxf86vm -lXinerama -lXcursor -lrt
+
+
+IMPORTANT - there is a big difference between -l and -L !!!!!! difference needs to be known!!!! do the changes to the windows system!!!
+
+in the file, glad MUST be included before GLFW or you will get errors!!!
+
