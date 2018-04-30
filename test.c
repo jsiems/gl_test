@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <math.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -10,18 +11,16 @@ void error_callback(int code, const char *err_str);
 const GLchar *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "out vec4 vertexColor;\n"
     "void main() {\n"
         "gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-        "vertexColor = vec4(aPos.x, aPos.y, 1.0, 1.0);\n"
     "}\0";
 
 const GLchar *fragmentShaderSource = 
     "#version 330 core \n"
     "out vec4 FragColor; \n"
-    "in vec4 vertexColor;\n"
+    "uniform vec4 ourColor;\n"
     "void main() { \n"
-        "FragColor = vertexColor;\n"
+        "FragColor = ourColor;\n"
     "}\0";
 
 int main() {
@@ -133,7 +132,17 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        float current_time = glfwGetTime(); //returns time in seconds
+        float green = (sin(current_time) / 2.0f) + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+
+        if(vertexColorLocation == -1) {
+            printf("Could not find vertex color location in shader program\n");
+            break;
+        }
+
         glUseProgram(shaderProgram);
+        glUniform4f(vertexColorLocation, 0.0f, green, 0.0f, 1.0f);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
