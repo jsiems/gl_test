@@ -13,6 +13,10 @@ void processInput(GLFWwindow *window);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
 
+float mixture = 0.0f;
+int up_pressed = 0;
+int down_pressed = 0;
+
 int main() {
     //initialize window
     GLFWwindow *window = initializeWindow();
@@ -29,23 +33,46 @@ int main() {
     }
 
 
-    //load texture
-    unsigned int texture;       //texture id given by opengl
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    //load textures
+    int image_width, image_height, nr_channels;
+    unsigned char *image_data;
+    unsigned int texture0, texture1;       //texture id given by opengl
+
+    //box
+    glGenTextures(1, &texture0);
+    glBindTexture(GL_TEXTURE_2D, texture0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     //load image data
-    int image_width, image_height, nr_channels;
-    unsigned char *image_data = stbi_load("container.jpg", &image_width, &image_height, &nr_channels, 0);
+    stbi_set_flip_vertically_on_load(1);
+    image_data = stbi_load("container.jpg", &image_width, &image_height, &nr_channels, 0);
     if(image_data != NULL) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else {
-        printf("Failed to load texture\n");
+        printf("Failed to load texture container\n");
+        return -1;
+    }
+    stbi_image_free(image_data);
+
+    //happy face
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //load image data
+    image_data = stbi_load("awesomeface.png", &image_width, &image_height, &nr_channels, 0);
+    if(image_data != NULL) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        printf("Failed to load texture awesome face\n");
         return -1;
     }
     stbi_image_free(image_data);
@@ -55,10 +82,10 @@ int main() {
 
     float vertices[] = {
         //positions           //colors            //texture coordinates
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,
         -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f
     };
 
     unsigned int indices[] = {
@@ -90,6 +117,10 @@ int main() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    glUseProgram(shader_program.id);
+    glUniform1i(glGetUniformLocation(shader_program.id, "texture0"), 0);
+    glUniform1i(glGetUniformLocation(shader_program.id, "texture1"), 1);
+
     //Main loop
     while(!glfwWindowShouldClose(window)) {
         //process inputs
@@ -100,7 +131,11 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader_program.id);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture1);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -117,9 +152,39 @@ int main() {
     return 0;
 }
 
+//should definitely use key callback for this
+//  keycallback insures that will we handle the input
+//  even if they release the key before we process the input
+//  in the loop
 void processInput(GLFWwindow *window) {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
+    int up = glfwGetKey(window, GLFW_KEY_UP);
+    int down = glfwGetKey(window, GLFW_KEY_DOWN);
+    if(escape == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1U);
+    if(up == GLFW_PRESS && !up_pressed) {
+        mixture += 0.1f;
+        printf("Up pressed");
+        up_pressed = 1;
+    }
+    else if(up == GLFW_RELEASE && up_pressed) {
+        up_pressed = 0;
+    }
+    if(down == GLFW_PRESS && !down_pressed) {
+        mixture -= 0.1f;
+        printf("Down pressed");
+        down_pressed = 1;
+    }
+    else if(down == GLFW_RELEASE && down_pressed) {
+        down_pressed = 0;
+    }
+    if(mixture < 0.0f) {
+        mixture = 0.0f;
+    }
+    if(mixture > 1.0f) {
+        mixture = 1.0f;
+    }
+
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
