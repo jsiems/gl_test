@@ -14,50 +14,81 @@ void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
 
 int main() {
-    printf("Hello, World!\n");
-
+    //initialize window
     GLFWwindow *window = initializeWindow();
-
+    //load the opengl library
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         printf("Failed to initiate GLAD\n");
         return -1;
     }
-
-    struct shader tri_shader;
-    if(!initializeShader(&tri_shader, "vertexshader.glsl", "fragmentshader.glsl")) {
-        printf("Error initializing tri_shader\n");
+    //initialize the shaders
+    struct shader shader_program;
+    if(!initializeShader(&shader_program, "vertexshader.glsl", "fragmentshader.glsl")) {
+        printf("Error initializing shader_program\n");
         return -1;
     }
 
 
+    //load texture
+    unsigned int texture;       //texture id given by opengl
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //load image data
+    int image_width, image_height, nr_channels;
+    unsigned char *image_data = stbi_load("container.jpg", &image_width, &image_height, &nr_channels, 0);
+    if(image_data != NULL) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        printf("Failed to load texture\n");
+        return -1;
+    }
+    stbi_image_free(image_data);
+
+
     //-------------vertex data and buffers
 
-    float tri_vert[] = {
-        -0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
-         0.0f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-         0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f
+    float vertices[] = {
+        //positions           //colors            //texture coordinates
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f
+    };
+
+    unsigned int indices[] = {
+        0, 1, 3,
+        1, 2, 3
     };
 
     //vertex array object, stores vertex buffer object and vertex attribute data
-    unsigned int VAO, VBO;
+    unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    //First Triangle creation and storing
+    //bind the vertex array object
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(tri_vert), tri_vert, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     //position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     //color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    // uncomment this call to draw in wireframe polygons.
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
+    //texture attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     //Main loop
     while(!glfwWindowShouldClose(window)) {
@@ -68,19 +99,10 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float current_time = glfwGetTime();
-        float offset = (sin(current_time) / 2.0f) + 0.5;
-        int ho_location = glGetUniformLocation(tri_shader.id, "horizontal_offset");
-
-        if(ho_location == -1) {
-            printf("Could not find horizontal offset uniform\n");
-            return -1;
-        }
-
-        glUseProgram(tri_shader.id);
-        glUniform1f(ho_location, offset);
+        glUseProgram(shader_program.id);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
@@ -89,6 +111,7 @@ int main() {
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     glfwTerminate();
     return 0;
