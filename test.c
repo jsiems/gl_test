@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <cglm/cglm.h>
 
 #include "shader.h"
 
@@ -16,6 +17,8 @@ GLFWwindow *initializeWindow();
 float mixture = 0.0f;
 int up_pressed = 0;
 int down_pressed = 0;
+
+mat4 rot;
 
 int main() {
     //initialize window
@@ -43,8 +46,8 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, texture0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //load image data
     stbi_set_flip_vertically_on_load(1);
     image_data = stbi_load("container.jpg", &image_width, &image_height, &nr_channels, 0);
@@ -63,8 +66,8 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, texture1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     //load image data
     image_data = stbi_load("awesomeface.png", &image_width, &image_height, &nr_channels, 0);
     if(image_data != NULL) {
@@ -164,7 +167,6 @@ void processInput(GLFWwindow *window) {
         glfwSetWindowShouldClose(window, 1U);
     if(up == GLFW_PRESS && !up_pressed) {
         mixture += 0.1f;
-        printf("Up pressed");
         up_pressed = 1;
     }
     else if(up == GLFW_RELEASE && up_pressed) {
@@ -172,7 +174,6 @@ void processInput(GLFWwindow *window) {
     }
     if(down == GLFW_PRESS && !down_pressed) {
         mixture -= 0.1f;
-        printf("Down pressed");
         down_pressed = 1;
     }
     else if(down == GLFW_RELEASE && down_pressed) {
