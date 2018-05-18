@@ -1,11 +1,11 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <glad/glad.h>              //defines opengl functions, etc
+#include <GLFW/glfw3.h>             //used for window and input
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#include <cglm/cglm.h>
+#include <stb_image.h>              //used to load images
+#include <cglm/cglm.h>              //used for maths
 
 #include "shader.h"
 
@@ -17,8 +17,6 @@ GLFWwindow *initializeWindow();
 float mixture = 0.0f;
 int up_pressed = 0;
 int down_pressed = 0;
-
-mat4 rot;
 
 int main() {
     //initialize window
@@ -34,6 +32,14 @@ int main() {
         printf("Error initializing shader_program\n");
         return -1;
     }
+
+    vec4 vec = {1.0f, 0.0f, 0.0f, 1.0f};
+    mat4 trans;
+    //creates new translation matrix 
+    glm_translate_make(trans, (vec3){1.0f, 1.0f, 0.0f});
+    //multiplies translations by vec, stores in vec
+    glm_mat4_mulv(trans, vec, vec);
+    printf("x: %f | y: %f | z: %f\n", vec[0], vec[1], vec[2]);
 
 
     //load textures
