@@ -3,8 +3,9 @@
 
 out vec4 FragColor;
 
-in vec3 ourColor;
-in vec2 texCoord;
+//IF THIS INPUT NAME IS NOT THE EXACT SAME AS THE OUTPUT NAME, 
+//  INPUT WILL NOT BE RECEIVE!!!! 
+in vec2 tex_coord;
 
 uniform sampler2D texture0;
 uniform sampler2D texture1;
@@ -12,5 +13,5 @@ uniform sampler2D texture1;
 uniform float mixture;
 
 void main() {
-   FragColor = mix(texture(texture0, texCoord), texture(texture1, texCoord), mixture) * vec4(ourColor, 1.0f);
+   FragColor = mix(texture(texture0, tex_coord), texture(texture1, tex_coord), mixture);
 }

@@ -9,12 +9,17 @@
 
 #include "shader.h"
 
+
+//macros
+#define degToRad(deg) ((deg) * M_PI / 180.0)
+#define radToDeg(rad) ((rad) * 180.0 / M_PI)
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
 
-float mixture = 0.0f;
+float mixture = 0.5f;
 int up_pressed = 0;
 int down_pressed = 0;
 
@@ -32,14 +37,6 @@ int main() {
         printf("Error initializing shader_program\n");
         return -1;
     }
-
-    vec4 vec = {1.0f, 0.0f, 0.0f, 1.0f};
-    mat4 trans;
-    //creates new translation matrix 
-    glm_translate_make(trans, (vec3){1.0f, 1.0f, 0.0f});
-    //multiplies translations by vec, stores in vec
-    glm_mat4_mulv(trans, vec, vec);
-    printf("x: %f | y: %f | z: %f\n", vec[0], vec[1], vec[2]);
 
 
     //load textures
@@ -90,11 +87,11 @@ int main() {
     //-------------vertex data and buffers
 
     float vertices[] = {
-        //positions           //colors            //texture coordinates
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f
+        //positions           //texture coordinates
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f,
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -117,14 +114,11 @@ int main() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     //position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    //color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    //texture attributes
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-    //texture attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
 
     glUseProgram(shader_program.id);
     glUniform1i(glGetUniformLocation(shader_program.id, "texture0"), 0);
@@ -139,12 +133,22 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shader_program.id);
-        glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
+        //bind textures
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture0);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture1);
+
+        //rotation and scale transformation
+        mat4 trans;
+        glm_rotate_make(trans, degToRad(90.0f), (vec3){0.0f, 0.0f, 1.0f});
+        glm_scale(trans, (vec3){0.5f, 0.5f, 0.5f});
+
+        //use shader program
+        glUseProgram(shader_program.id);
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "transformation")
+                          , 1, GL_FALSE, (GLfloat *)trans);
+        glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
