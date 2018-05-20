@@ -141,8 +141,8 @@ int main() {
 
         //rotation and scale transformation
         mat4 trans;
-        glm_rotate_make(trans, degToRad(90.0f), (vec3){0.0f, 0.0f, 1.0f});
-        glm_scale(trans, (vec3){0.5f, 0.5f, 0.5f});
+        glm_translate_make(trans, (vec3){0.5f, -0.5f, 0.0f});
+        glm_rotate(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
 
         //use shader program
         glUseProgram(shader_program.id);
