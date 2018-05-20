@@ -141,8 +141,11 @@ int main() {
 
         //rotation and scale transformation
         mat4 trans;
-        glm_translate_make(trans, (vec3){0.5f, -0.5f, 0.0f});
-        glm_rotate(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
+        //glm_translate_make(trans, (vec3){0.5f, -0.5f, 0.0f});
+        //glm_rotate(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
+        //these events happen in reverse order that you declare them ????
+        glm_rotate_make(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
+        glm_translate(trans, (vec3){0.5f, -0.5f, 0.0f});
 
         //use shader program
         glUseProgram(shader_program.id);
