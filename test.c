@@ -19,7 +19,7 @@ void processInput(GLFWwindow *window);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
 
-float mixture = 0.5f;
+float mixture = 0.0f;
 int up_pressed = 0;
 int down_pressed = 0;
 
@@ -140,20 +140,28 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture1);
 
         //rotation and scale transformation
+        //  this might not clear the data at the end???? not sure
         mat4 trans;
-        //glm_translate_make(trans, (vec3){0.5f, -0.5f, 0.0f});
-        //glm_rotate(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
-        //these events happen in reverse order that you declare them ????
-        glm_rotate_make(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
-        glm_translate(trans, (vec3){0.5f, -0.5f, 0.0f});
 
         //use shader program
         glUseProgram(shader_program.id);
-        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "transformation")
-                          , 1, GL_FALSE, (GLfloat *)trans);
         glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
         glBindVertexArray(VAO);
+
+        glm_translate_make(trans, (vec3){-0.5f, 0.5f, 0.0f});
+        glm_rotate(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "transformation")
+                          , 1, GL_FALSE, (GLfloat *)trans);
+
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glm_translate_make(trans, (vec3){0.5f, -0.5f, 0.0f});
+        glm_scale(trans, (vec3){(float)sin(glfwGetTime()), (float)sin(glfwGetTime() + 1), (float)sin(glfwGetTime() + 2)});
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "transformation")
+                          , 1, GL_FALSE, (GLfloat *)trans);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
