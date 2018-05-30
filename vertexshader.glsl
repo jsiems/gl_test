@@ -7,10 +7,12 @@ layout (location = 1) in vec2 tex_coord_in;
 //OUTPUT MUST HAVE THE ****EXACT**** SAME NAME AS INPUT TO FRAGMENT SHADER
 out vec2 tex_coord;
 
-uniform mat4 transformation;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main() {
-   gl_Position = transformation * vec4(pos, 1.0);
+   gl_Position = projection * view * model * vec4(pos, 1.0);
    tex_coord = vec2(tex_coord_in.x, tex_coord_in.y);
 }
 

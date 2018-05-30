@@ -14,6 +14,9 @@
 #define degToRad(deg) ((deg) * M_PI / 180.0)
 #define radToDeg(rad) ((rad) * 180.0 / M_PI)
 
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 void glfw_error_callback(int code, const char *err_str);
@@ -88,10 +91,47 @@ int main() {
 
     float vertices[] = {
         //positions           //texture coordinates
-         0.5f,  0.5f, 0.0f,   1.0f, 1.0f,
-         0.5f, -0.5f, 0.0f,   1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f
+         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
     unsigned int indices[] = {
@@ -139,29 +179,27 @@ int main() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture1);
 
-        //rotation and scale transformation
-        //  this might not clear the data at the end???? not sure
-        mat4 trans;
+        mat4 model, view, projection;
+        glm_rotate_make(model, (float)glfwGetTime() * degToRad(50.0f), (vec3){0.5f, 1.0f, 0.0f});
+        glm_translate_make(view, (vec3){0.0f, 0.0f, -3.0f});
+        glm_perspective(degToRad(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
 
         //use shader program
         glUseProgram(shader_program.id);
         glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
         glBindVertexArray(VAO);
 
-        glm_translate_make(trans, (vec3){-0.5f, 0.5f, 0.0f});
-        glm_rotate(trans, (float)glfwGetTime(), (vec3){0.0f, 0.0f, 1.0f});
-        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "transformation")
-                          , 1, GL_FALSE, (GLfloat *)trans);
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "model")
+                          , 1, GL_FALSE, (GLfloat *)model);
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "view")
+                          , 1, GL_FALSE, (GLfloat *)view);
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "projection")
+                          , 1, GL_FALSE, (GLfloat *)projection);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        glm_translate_make(trans, (vec3){0.5f, -0.5f, 0.0f});
-        glm_scale(trans, (vec3){(float)sin(glfwGetTime()), (float)sin(glfwGetTime() + 1), (float)sin(glfwGetTime() + 2)});
-        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "transformation")
-                          , 1, GL_FALSE, (GLfloat *)trans);
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        
+        //unbind vertex array
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
@@ -229,7 +267,7 @@ GLFWwindow *initializeWindow() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "TITLE", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "TITLE", NULL, NULL);
 
     if(window == NULL) {
         printf("Error creating window\n");
