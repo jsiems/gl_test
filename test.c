@@ -34,6 +34,8 @@ int main() {
         printf("Failed to initiate GLAD\n");
         return -1;
     }
+    //enable depth test
+    glEnable(GL_DEPTH_TEST);
     //initialize the shaders
     struct shader shader_program;
     if(!initializeShader(&shader_program, "vertexshader.glsl", "fragmentshader.glsl")) {
@@ -139,6 +141,19 @@ int main() {
         1, 2, 3
     };
 
+    vec3 cubes[] = {
+        { 0.0f,  0.0f,  0.0f},
+        { 2.0f,  5.0f, -15.0f},
+        {-1.5f, -2.2f, -2.5f},
+        {-3.8f, -2.0f, -12.3f},
+        { 2.4f, -0.4f, -3.5f},
+        {-1.7f,  3.0f, -7.5f},
+        { 1.3f, -2.0f, -2.5f},
+        { 1.5f,  2.0f, -2.5f},
+        { 1.5f,  0.2f, -1.5f},
+        {-1.3f,  1.0f, -1.5f},
+    };
+
     //vertex array object, stores vertex buffer object and vertex attribute data
     unsigned int VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -172,7 +187,6 @@ int main() {
         //rendering commands here
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
 
         //bind textures
         glActiveTexture(GL_TEXTURE0);
@@ -180,25 +194,26 @@ int main() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture1);
 
-        mat4 model, view, projection;
-        glm_rotate_make(model, (float)glfwGetTime() * degToRad(50.0f), (vec3){0.5f, 1.0f, 0.0f});
-        glm_translate_make(view, (vec3){0.0f, 0.0f, -3.0f});
-        glm_perspective(degToRad(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
-
         //use shader program
         glUseProgram(shader_program.id);
         glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
         glBindVertexArray(VAO);
 
-        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "model")
-                          , 1, GL_FALSE, (GLfloat *)model);
-        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "view")
-                          , 1, GL_FALSE, (GLfloat *)view);
-        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "projection")
-                          , 1, GL_FALSE, (GLfloat *)projection);
+        mat4 view, projection;
+        glm_translate_make(view, (vec3){0.0f, 0.0f, -3.0f});
+        glm_perspective(degToRad(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "view"), 1, GL_FALSE, (GLfloat *)view);
+        glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "projection"), 1, GL_FALSE, (GLfloat *)projection);
 
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for(int i = 0; i < 10; i ++) {
+            mat4 model;
+            glm_translate_make(model, cubes[i]);
+            glm_rotate(model, i * degToRad(20.0f) + (float)glfwGetTime() * degToRad(50.0f), (vec3){0.5f, 1.0f, 0.0f});
+
+            glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "model"), 1, GL_FALSE, (GLfloat *)model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         //unbind vertex array
         glBindVertexArray(0);
