@@ -20,6 +20,7 @@
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
+void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
 
@@ -41,6 +42,7 @@ int first_mouse = 1;
 
 float yaw = -90.0f;
 float pitch = 0.0f;
+float fov = 45.0f;
 
 vec3 cam_pos   = {0.0f, 0.0f,  3.0f};
 vec3 cam_front = {0.0f, 0.0f, -1.0f};
@@ -228,7 +230,7 @@ int main() {
 
         //constructs the projection matrix
         mat4 projection;
-        glm_perspective(degToRad(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
+        glm_perspective(degToRad(fov), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
         glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "projection"), 1, GL_FALSE, (GLfloat *)projection);
 
         for(int i = 0; i < 10; i ++) {
@@ -348,6 +350,15 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
     glm_normalize(cam_front);
 }
 
+void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
+    if(fov >= 1.0f && fov <= 45.0f)
+        fov -= y_offset;
+    if(fov <= 1.0f)
+        fov = 1.0f;
+    if(fov >= 45.0f)
+        fov = 45.0f;
+}
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -380,6 +391,7 @@ GLFWwindow *initializeWindow() {
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     return window;
 }
