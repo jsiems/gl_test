@@ -26,6 +26,15 @@ float mixture = 0.0f;
 int up_pressed = 0;
 int down_pressed = 0;
 
+int w_pressed = 0;
+int a_pressed = 0;
+int s_pressed = 0;
+int d_pressed = 0;
+
+vec3 cam_pos   = {0.0f, 0.0f,  3.0f};
+vec3 cam_front = {0.0f, 0.0f, -1.0f};
+vec3 cam_up    = {0.0f, 1.0f,  0.0f};
+
 int main() {
     //initialize window
     GLFWwindow *window = initializeWindow();
@@ -201,12 +210,9 @@ int main() {
 
         //constructs a lookat view matrix
         mat4 view;
-        float cam_x = sin(glfwGetTime()) * 10.0f;
-        float cam_z = cos(glfwGetTime()) * 10.0f;
-        glm_lookat((vec3){cam_x, 0.0f, cam_z}, //cam position
-                   (vec3){0.0f,  0.0f, 0.0f}, //point it is looking at
-                   (vec3){0.0f,  1.0f, 0.0f}, //up vector in world space
-                   view);
+        vec3 cam_dir;
+        glm_vec_add(cam_pos, cam_front, cam_dir);
+        glm_lookat(cam_pos, cam_dir, cam_up, view);
         glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "view"), 1, GL_FALSE, (GLfloat *)view);
 
         //constructs the projection matrix
@@ -247,6 +253,11 @@ void processInput(GLFWwindow *window) {
     int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
     int up = glfwGetKey(window, GLFW_KEY_UP);
     int down = glfwGetKey(window, GLFW_KEY_DOWN);
+    int w = glfwGetKey(window, GLFW_KEY_W);
+    int a = glfwGetKey(window, GLFW_KEY_A);
+    int s = glfwGetKey(window, GLFW_KEY_S);
+    int d = glfwGetKey(window, GLFW_KEY_D);
+
     if(escape == GLFW_PRESS)
         glfwSetWindowShouldClose(window, 1U);
     if(up == GLFW_PRESS && !up_pressed) {
@@ -268,6 +279,25 @@ void processInput(GLFWwindow *window) {
     }
     if(mixture > 1.0f) {
         mixture = 1.0f;
+    }
+
+    float cam_speed = 0.0005f;
+    vec3 temp;
+    if(w == GLFW_PRESS) {
+        glm_vec_muladds(cam_front, cam_speed, cam_pos);
+    }
+    if(a == GLFW_PRESS) {
+        glm_vec_cross(cam_front, cam_up, temp);
+        glm_normalize(temp);
+        glm_vec_muladds(temp, -1 * cam_speed, cam_pos);
+    }
+    if(s == GLFW_PRESS) {
+        glm_vec_muladds(cam_front, -1 * cam_speed, cam_pos);
+    }
+    if(d == GLFW_PRESS) {
+        glm_vec_cross(cam_front, cam_up, temp);
+        glm_normalize(temp);
+        glm_vec_muladds(temp, cam_speed, cam_pos);
     }
 
 }
