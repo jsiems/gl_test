@@ -19,6 +19,7 @@
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
+void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
 
@@ -30,6 +31,16 @@ int w_pressed = 0;
 int a_pressed = 0;
 int s_pressed = 0;
 int d_pressed = 0;
+
+float delta_time = 0.0f;
+float last_frame = 0.0f;
+
+float last_mouse_x = 400;
+float last_mouse_y = 300;
+int first_mouse = 1;
+
+float yaw = -90.0f;
+float pitch = 0.0f;
 
 vec3 cam_pos   = {0.0f, 0.0f,  3.0f};
 vec3 cam_front = {0.0f, 0.0f, -1.0f};
@@ -281,7 +292,11 @@ void processInput(GLFWwindow *window) {
         mixture = 1.0f;
     }
 
-    float cam_speed = 0.0005f;
+    float current_frame = glfwGetTime();
+    delta_time = current_frame - last_frame;
+    last_frame = current_frame;
+
+    float cam_speed = 2.5f * delta_time;
     vec3 temp;
     if(w == GLFW_PRESS) {
         glm_vec_muladds(cam_front, cam_speed, cam_pos);
@@ -300,6 +315,37 @@ void processInput(GLFWwindow *window) {
         glm_vec_muladds(temp, cam_speed, cam_pos);
     }
 
+}
+
+void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
+    //prevent sudden camera jump when mouse enters window
+    if(first_mouse) {
+        last_mouse_x = x_pos;
+        last_mouse_y = y_pos;
+        first_mouse = 0;
+    }
+
+    float x_offset = x_pos - last_mouse_x;
+    float y_offset = last_mouse_y - y_pos;
+    last_mouse_x = x_pos;
+    last_mouse_y = y_pos;
+
+    float sensitivity = 0.05f;
+    x_offset *= sensitivity;
+    y_offset *= sensitivity;
+
+    yaw += x_offset;
+    pitch += y_offset;
+
+    if(pitch > 89.0f)
+        pitch = 89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+    cam_front[0] = cos(degToRad(yaw)) * cos(degToRad(pitch));
+    cam_front[1] = sin(degToRad(pitch));
+    cam_front[2] = sin(degToRad(yaw)) * cos(degToRad(pitch));
+    glm_normalize(cam_front);
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
@@ -331,6 +377,9 @@ GLFWwindow *initializeWindow() {
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     return window;
 }
