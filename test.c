@@ -199,10 +199,19 @@ int main() {
         glUniform1f(glGetUniformLocation(shader_program.id, "mixture"), mixture);
         glBindVertexArray(VAO);
 
-        mat4 view, projection;
-        glm_translate_make(view, (vec3){0.0f, 0.0f, -3.0f});
-        glm_perspective(degToRad(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
+        //constructs a lookat view matrix
+        mat4 view;
+        float cam_x = sin(glfwGetTime()) * 10.0f;
+        float cam_z = cos(glfwGetTime()) * 10.0f;
+        glm_lookat((vec3){cam_x, 0.0f, cam_z}, //cam position
+                   (vec3){0.0f,  0.0f, 0.0f}, //point it is looking at
+                   (vec3){0.0f,  1.0f, 0.0f}, //up vector in world space
+                   view);
         glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "view"), 1, GL_FALSE, (GLfloat *)view);
+
+        //constructs the projection matrix
+        mat4 projection;
+        glm_perspective(degToRad(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
         glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "projection"), 1, GL_FALSE, (GLfloat *)projection);
 
         for(int i = 0; i < 10; i ++) {
