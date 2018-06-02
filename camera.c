@@ -37,14 +37,14 @@ void translateCamera(struct camera *cam, enum camera_movement direction, float d
 
     if(direction == cam_right) {
         glm_vec_muladds(cam->right, velocity, cam->position);
-    } 
+    }
 }
 
 void rotateCamera(struct camera *cam, float x_offset, float y_offset, uint8_t constrain_pitch) {
     x_offset *= cam->mouse_sensitivity;
     y_offset *= cam->mouse_sensitivity;
 
-    cam->yaw += x_offset;
+    cam->yaw = fmod(cam->yaw + x_offset, 360.0f);
     cam->pitch += y_offset;
 
     //move magic numbers to constants
