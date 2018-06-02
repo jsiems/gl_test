@@ -5,7 +5,7 @@ gcc test.c glad.c -o test -I ./include/ -L ./include/ -lglfw3 -lGL -lX11 -lpthre
 
 
 Full command WINDOWS:
-gcc .\test.c .\glad.c -o test -Iinclude -Linclude -lglfw3 -lgdi32 -lopengl32 -msse3
+gcc ./*.c -o test -Iinclude -Linclude -lglfw3 -lgdi32 -lopengl32 -Wall -msse3 -g
 
 I have no idea really where -msse3 comes from, but it is required for cglm to compile!
 See this stack overflow post for MAYBE more info:
