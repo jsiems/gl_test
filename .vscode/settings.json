@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "glad.h": "c",
-        "glfw3.h": "c"
+        "glfw3.h": "c",
+        "stb_image.h": "c",
+        "stdio.h": "c"
     }
 }

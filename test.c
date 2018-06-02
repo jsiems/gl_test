@@ -8,6 +8,7 @@
 #include <cglm/cglm.h>              //used for maths
 
 #include "shader.h"
+#include "camera.h"
 
 
 //macros
@@ -18,7 +19,7 @@
 #define SCREEN_HEIGHT 600
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, struct camera *cam);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void glfw_error_callback(int code, const char *err_str);
@@ -28,25 +29,14 @@ float mixture = 0.0f;
 int up_pressed = 0;
 int down_pressed = 0;
 
-int w_pressed = 0;
-int a_pressed = 0;
-int s_pressed = 0;
-int d_pressed = 0;
-
 float delta_time = 0.0f;
 float last_frame = 0.0f;
 
 float last_mouse_x = 400;
 float last_mouse_y = 300;
-int first_mouse = 1;
+uint8_t first_mouse = 1;
 
-float yaw = -90.0f;
-float pitch = 0.0f;
-float fov = 45.0f;
-
-vec3 cam_pos   = {0.0f, 0.0f,  3.0f};
-vec3 cam_front = {0.0f, 0.0f, -1.0f};
-vec3 cam_up    = {0.0f, 1.0f,  0.0f};
+struct camera cam;
 
 int main() {
     //initialize window
@@ -65,6 +55,9 @@ int main() {
         return -1;
     }
 
+    
+    //initialize the camera
+    initializeCamera(&cam, (vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 1.0f, 0.0f}, -90.0f, 0.0f, 2.5f, 0.1f, 45.0f);
 
     //load textures
     int image_width, image_height, nr_channels;
@@ -203,8 +196,13 @@ int main() {
 
     //Main loop
     while(!glfwWindowShouldClose(window)) {
+        //update time since last update
+        float current_frame = glfwGetTime();
+        delta_time = current_frame - last_frame;
+        last_frame = current_frame;
+
         //process inputs
-        processInput(window);
+        processInput(window, &cam);
 
         //rendering commands here
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -223,14 +221,12 @@ int main() {
 
         //constructs a lookat view matrix
         mat4 view;
-        vec3 cam_dir;
-        glm_vec_add(cam_pos, cam_front, cam_dir);
-        glm_lookat(cam_pos, cam_dir, cam_up, view);
+        getViewMatrix(&cam, view);
         glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "view"), 1, GL_FALSE, (GLfloat *)view);
 
         //constructs the projection matrix
         mat4 projection;
-        glm_perspective(degToRad(fov), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
+        glm_perspective(degToRad(cam.zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
         glUniformMatrix4fv(glGetUniformLocation(shader_program.id, "projection"), 1, GL_FALSE, (GLfloat *)projection);
 
         for(int i = 0; i < 10; i ++) {
@@ -262,7 +258,7 @@ int main() {
 //  keycallback insures that will we handle the input
 //  even if they release the key before we process the input
 //  in the loop
-void processInput(GLFWwindow *window) {
+void processInput(GLFWwindow *window, struct camera *cam) {
     int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
     int up = glfwGetKey(window, GLFW_KEY_UP);
     int down = glfwGetKey(window, GLFW_KEY_DOWN);
@@ -294,27 +290,17 @@ void processInput(GLFWwindow *window) {
         mixture = 1.0f;
     }
 
-    float current_frame = glfwGetTime();
-    delta_time = current_frame - last_frame;
-    last_frame = current_frame;
-
-    float cam_speed = 2.5f * delta_time;
-    vec3 temp;
     if(w == GLFW_PRESS) {
-        glm_vec_muladds(cam_front, cam_speed, cam_pos);
+        translateCamera(cam, cam_forward, delta_time);
     }
     if(a == GLFW_PRESS) {
-        glm_vec_cross(cam_front, cam_up, temp);
-        glm_normalize(temp);
-        glm_vec_muladds(temp, -1 * cam_speed, cam_pos);
+        translateCamera(cam, cam_left, delta_time);
     }
     if(s == GLFW_PRESS) {
-        glm_vec_muladds(cam_front, -1 * cam_speed, cam_pos);
+        translateCamera(cam, cam_backward, delta_time);
     }
     if(d == GLFW_PRESS) {
-        glm_vec_cross(cam_front, cam_up, temp);
-        glm_normalize(temp);
-        glm_vec_muladds(temp, cam_speed, cam_pos);
+        translateCamera(cam, cam_right, delta_time);
     }
 
 }
@@ -332,31 +318,11 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
     last_mouse_x = x_pos;
     last_mouse_y = y_pos;
 
-    float sensitivity = 0.05f;
-    x_offset *= sensitivity;
-    y_offset *= sensitivity;
-
-    yaw += x_offset;
-    pitch += y_offset;
-
-    if(pitch > 89.0f)
-        pitch = 89.0f;
-    if(pitch < -89.0f)
-        pitch = -89.0f;
-
-    cam_front[0] = cos(degToRad(yaw)) * cos(degToRad(pitch));
-    cam_front[1] = sin(degToRad(pitch));
-    cam_front[2] = sin(degToRad(yaw)) * cos(degToRad(pitch));
-    glm_normalize(cam_front);
+    rotateCamera(&cam, x_offset, y_offset, 1U);
 }
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
-    if(fov >= 1.0f && fov <= 45.0f)
-        fov -= y_offset;
-    if(fov <= 1.0f)
-        fov = 1.0f;
-    if(fov >= 45.0f)
-        fov = 45.0f;
+    zoomCamera(&cam, y_offset);
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
