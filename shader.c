@@ -103,3 +103,73 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
 
     return 1;
 }
+
+int32_t getUniformLocation(struct shader *shdr, const char *name) {
+    int32_t location;
+    location = glGetUniformLocation(shdr->id, name);
+    if(location == -1) {
+        printf("Error location uniform %s\n", name);
+        //maybe in the future don't just exit
+        exit(1);
+    }
+    return location;
+}
+
+void setUniform(struct shader *shdr, const char *name, enum uniform_data_type data_type, uint8_t size, void *data)) {
+    uint32_t uniform_location = getUniformLocation(shdr, name);
+    switch(data_type) {
+        case uniform_int:
+            switch(size) {
+                case 1:
+                    glUniform1i(location, *(int *)data);
+                break;
+                default:
+                    printf("Error: uniform int function not added for size %d\n", size);
+                    //in future mayve don't exact just return false or something
+                    exit(1);
+                break;
+            }
+        break;
+        case uniform_float:
+            switch(size) {
+                case 1:
+                    glUniform1f(location, *(float *)data);
+                break;
+                case 2:
+                    glUniform2fv(location, 1, (float *)data);
+                break;
+                case 3:
+                    glUniform3fv(location, 1, (float *)data);
+                break;
+                default:
+                    printf("Error: no added uniform float function for size %d\n", size);
+                    exit(1);
+                break;
+            }
+        break;
+        case uniform_matrix:
+            switch(size) {
+                case 2:
+                    glUniformMatrix2fv(location, 1, GL_FALSE, (float *)data);
+                break;
+                case 3:
+                    glUniformMatrix3fv(location, 1, GL_FALSE, (float *)data);
+                break;
+                case 4:
+                    glUniformMatrix4fv(location, 1, GL_FALSE, (float *)data);
+                break;
+                default:
+                    printf("Error: no added uniform matrix function for size %d\n", size);
+                    exit(1);
+                break;
+            }
+        break;
+        default:
+            printf("Error setting uniform: invalid uniform data type\n");
+            exit(1);
+        break;
+    }
+}
+
+
+
