@@ -167,6 +167,8 @@ int main() {
         getViewMatrix(&cam, view);
         glm_perspective(degToRad(cam.zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
 
+        light_pos[2] = 5.0f * sin((float)glfwGetTime()) - 3.0f;
+
         // LIGHT UNIFORMS && DRAWING
         //Configure uniforms and draw vertices for light
         glUseProgram(light_shader.id);
@@ -191,7 +193,7 @@ int main() {
         setUniform(&object_shader, "light_pos", uniform_float, 3, (void *)light_pos);
         setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
 
-        for(int i = 0; i < 10; i ++) {
+        for(int i = 0; i < 3; i ++) {
             mat4 model;
             glm_translate_make(model, cubes[i]);
             glm_rotate(model, i * degToRad(20.0f) + (float)glfwGetTime() * degToRad(50.0f), (vec3){0.5f, 1.0f, 0.0f});
