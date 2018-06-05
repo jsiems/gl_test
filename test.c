@@ -164,16 +164,15 @@ int main() {
         getViewMatrix(&cam, view);
         glm_perspective(degToRad(cam.zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
 
-
         // LIGHT UNIFORMS && DRAWING
         //Configure uniforms and draw vertices for light
         glUseProgram(light_shader.id);
         glBindVertexArray(lightVAO);
-        glUniformMatrix4fv(glGetUniformLocation(light_shader.id, "view"), 1, GL_FALSE, (GLfloat *)view);
-        glUniformMatrix4fv(glGetUniformLocation(light_shader.id, "projection"), 1, GL_FALSE, (GLfloat *)projection);
+        setUniform(&light_shader, "view", uniform_matrix, 4, (void *)view);
+        setUniform(&light_shader, "projection", uniform_matrix, 4, (void *)projection);
         glm_translate_make(model, light);
         glm_scale(model, (vec3){0.2f, 0.2f, 0.2f});
-        glUniformMatrix4fv(glGetUniformLocation(light_shader.id, "model"), 1, GL_FALSE, (GLfloat *)model);
+        setUniform(&light_shader, "model", uniform_matrix, 4, (void *)model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
@@ -181,17 +180,17 @@ int main() {
         //Configure uniforms and draw vertices for cubes
         glUseProgram(object_shader.id);
         glBindVertexArray(VAO);
-        glUniformMatrix4fv(glGetUniformLocation(object_shader.id, "view"), 1, GL_FALSE, (GLfloat *)view);
-        glUniformMatrix4fv(glGetUniformLocation(object_shader.id, "projection"), 1, GL_FALSE, (GLfloat *)projection);
+        setUniform(&object_shader, "view", uniform_matrix, 4, (void *)view);
+        setUniform(&object_shader, "projection", uniform_matrix, 4, (void *)projection);
         //sets the objects color and the color of the light hitting the object
-        glUniform3fv(glGetUniformLocation(object_shader.id, "object_color"), 1, (vec3){1.0f, 0.5f, 0.31f});
-        glUniform3fv(glGetUniformLocation(object_shader.id, "light_color"), 1, (vec3){1.0f, 1.0f, 1.0f});
+        setUniform(&object_shader, "object_color", uniform_float, 3, (void *)(vec3){1.0f, 0.5f, 0.31f});
+        setUniform(&object_shader, "light_color", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
 
         for(int i = 0; i < 10; i ++) {
             mat4 model;
             glm_translate_make(model, cubes[i]);
             glm_rotate(model, i * degToRad(20.0f) + (float)glfwGetTime() * degToRad(50.0f), (vec3){0.5f, 1.0f, 0.0f});
-            glUniformMatrix4fv(glGetUniformLocation(object_shader.id, "model"), 1, GL_FALSE, (GLfloat *)model);
+            setUniform(&object_shader, "model", uniform_matrix, 4, (void *)model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 

@@ -20,10 +20,17 @@ enum uniform_data_type {
 //returns 1 is successful, 0 if not
 uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const char *fragment_filename);
 
-//returns uniform location, exits if uniform cannot be located
-uint8_t getUniformLocation(struct shader *shdr, const char *name);
-
 //sets the value of a uniform
-void setUniform(struct shader *shdr, const char *name, enum data_type, uint8_t size, void *data);
+//  MUST BE CALLED AFTER SHADER IS BINDED
+//
+//  to use with single value, pass pointer to value casted to void pointer
+//  e.g. float num = 1.2; setUniform(shdr, "nam", type, 1, (void *)&num);
+//
+//  to use with mat2, just cast to void pointer
+//  float num[2][2] = {{1.0, 0.0},{0.0, 1.0}}; setUniform(shdr, "nam", type, 2, (void *)num);
+//
+//  to use with mat3 (or mat4 probably), same as previous
+//  mat3 num = {{...},{...},{...}}; setUniform(shdr, "nam", type, 3, (void *)num);
+void setUniform(struct shader *shdr, const char *name, enum uniform_data_type data_type, uint8_t size, void *data);
 
 #endif

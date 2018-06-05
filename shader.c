@@ -104,19 +104,15 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     return 1;
 }
 
-int32_t getUniformLocation(struct shader *shdr, const char *name) {
-    int32_t location;
+//DONT use uniforms for everything, apparently uniform buffers are much better
+void setUniform(struct shader *shdr, const char *name, enum uniform_data_type data_type, uint8_t size, void *data) {
+    uint32_t location;
     location = glGetUniformLocation(shdr->id, name);
     if(location == -1) {
-        printf("Error location uniform %s\n", name);
+        printf("Error locating uniform %s\n", name);
         //maybe in the future don't just exit
         exit(1);
     }
-    return location;
-}
-
-void setUniform(struct shader *shdr, const char *name, enum uniform_data_type data_type, uint8_t size, void *data)) {
-    uint32_t uniform_location = getUniformLocation(shdr, name);
     switch(data_type) {
         case uniform_int:
             switch(size) {
@@ -124,7 +120,7 @@ void setUniform(struct shader *shdr, const char *name, enum uniform_data_type da
                     glUniform1i(location, *(int *)data);
                 break;
                 default:
-                    printf("Error: uniform int function not added for size %d\n", size);
+                    printf("Error: no uniform int size match: %s %d\n", name, size);
                     //in future mayve don't exact just return false or something
                     exit(1);
                 break;
@@ -142,7 +138,7 @@ void setUniform(struct shader *shdr, const char *name, enum uniform_data_type da
                     glUniform3fv(location, 1, (float *)data);
                 break;
                 default:
-                    printf("Error: no added uniform float function for size %d\n", size);
+                    printf("Error: no uniform float size match: %s %d\n", name, size);
                     exit(1);
                 break;
             }
@@ -159,13 +155,13 @@ void setUniform(struct shader *shdr, const char *name, enum uniform_data_type da
                     glUniformMatrix4fv(location, 1, GL_FALSE, (float *)data);
                 break;
                 default:
-                    printf("Error: no added uniform matrix function for size %d\n", size);
+                    printf("Error: no uniform matrix size match: %s %d\n", name, size);
                     exit(1);
                 break;
             }
         break;
         default:
-            printf("Error setting uniform: invalid uniform data type\n");
+            printf("Error: invalid uniform data type: %s %d\n", name, data_type);
             exit(1);
         break;
     }
