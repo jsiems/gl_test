@@ -63,7 +63,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     if(!success) {
         glGetShaderInfoLog(vertex_shader, GL_COMPILE_STATUS, NULL, info_log);
         printf("ERROR: vertex shader compilation failed\n\t%s\n", info_log);
-        return -1;
+        return 0;
     }
 
     //fragment shader compilation
@@ -74,7 +74,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     if(!success) {
         glGetShaderInfoLog(fragment_shader, GL_COMPILE_STATUS, NULL, info_log);
         printf("ERROR: fragment shader compilation failed\n\t%s\n", info_log);
-        return -1;
+        return 0;
     }
 
     //SHADER program linkage
@@ -86,7 +86,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     if(!success) {
         glGetProgramInfoLog(shdr->id, 512, NULL, info_log);
         printf("ERROR: program 1 linkage failed\n\t%s\n", info_log);
-        return -1;
+        return 0;
     }
 
     //vertex and fragment shaders deleted after linking to shader program

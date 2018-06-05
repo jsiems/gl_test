@@ -22,6 +22,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
 
 //sets the value of a uniform
 //  MUST BE CALLED AFTER SHADER IS BINDED
+//  maybe not ^ not entirely sure
 //
 //  to use with single value, pass pointer to value casted to void pointer
 //  e.g. float num = 1.2; setUniform(shdr, "nam", type, 1, (void *)&num);
