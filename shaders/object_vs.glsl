@@ -17,6 +17,8 @@ void main() {
     //  and sent down using uniforms
     //  and it makes the GPU whine lol
     // GPU whines anyway
+    // light on wrong side of cubes LIKELY due to bad normals
+    // PROBABLY will be fixed someday when we define normals better
     normal_vec = mat3(transpose(inverse(model))) * normal_in;
 
     gl_Position = projection * view * model * vec4(pos, 1.0);

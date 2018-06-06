@@ -187,10 +187,29 @@ int main() {
         glBindVertexArray(VAO);
         setUniform(&object_shader, "view", uniform_matrix, 4, (void *)view);
         setUniform(&object_shader, "projection", uniform_matrix, 4, (void *)projection);
+
         //sets the objects color and the color of the light hitting the object
-        setUniform(&object_shader, "object_color", uniform_float, 3, (void *)(vec3){1.0f, 0.5f, 0.31f});
-        setUniform(&object_shader, "light_color", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
-        setUniform(&object_shader, "light_pos", uniform_float, 3, (void *)light_pos);
+        setUniform(&object_shader, "material.ambient", uniform_float, 3, (void *)(vec3){1.0f, 0.5f, 0.31f});
+        setUniform(&object_shader, "material.diffuse", uniform_float, 3, (void *)(vec3){1.0f, 0.5f, 0.31f});
+        setUniform(&object_shader, "material.specular", uniform_float, 3, (void *)(vec3){0.5f, 0.5f, 0.5f});
+        float shininess = 32.0f;
+        setUniform(&object_shader, "material.shininess", uniform_float, 1, (void *)&shininess);
+
+        //light colors n such
+        vec3 light_color;
+        light_color[0] = sin(glfwGetTime() * 2.0f);
+        light_color[1] = sin(glfwGetTime() * 0.7f);
+        light_color[2] = sin(glfwGetTime() * 1.3f);
+        vec3 diffuse_color;
+        glm_vec_mul(light_color, (vec3){0.5f, 0.5f, 0.5f}, diffuse_color);
+        vec3 ambient_color;
+        glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
+
+        setUniform(&object_shader, "light.position", uniform_float, 3, (void *)light_pos);
+        setUniform(&object_shader, "light.ambient", uniform_float, 3, (void *)ambient_color);
+        setUniform(&object_shader, "light.diffuse", uniform_float, 3, (void *)diffuse_color);
+        setUniform(&object_shader, "light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+
         setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
 
         for(int i = 0; i < 3; i ++) {
