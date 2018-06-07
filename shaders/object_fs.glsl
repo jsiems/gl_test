@@ -5,7 +5,7 @@ out vec4 FragColor;
 
 in vec3 normal_vec;
 in vec3 frag_pos;
-in vec3 tex_coords;
+in vec2 tex_coords;
 
 struct Material {
     sampler2D diffuse;
