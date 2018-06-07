@@ -18,6 +18,8 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
+#define FPS_LIMIT 60.0f
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, struct camera *cam);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
@@ -148,12 +150,23 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+
+    //keep track of FPS
+    uint64_t total_frames = 0;
+    float start_time = glfwGetTime();
+    float min_frame_time = 1 / FPS_LIMIT;
+
     //Main loop
     while(!glfwWindowShouldClose(window)) {
-        //update time since last update
+        //wait for max FPS limit
+        while(glfwGetTime() - last_frame < min_frame_time);
+
+        //update time since last frame
         float current_frame = glfwGetTime();
         delta_time = current_frame - last_frame;
         last_frame = current_frame;
+
+        total_frames ++;
 
         //process inputs
         processInput(window, &cam);
@@ -212,7 +225,7 @@ int main() {
 
         setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
 
-        for(int i = 0; i < 3; i ++) {
+        for(int i = 0; i < 10; i ++) {
             mat4 model;
             glm_translate_make(model, cubes[i]);
             glm_rotate(model, i * degToRad(20.0f) + (float)glfwGetTime() * degToRad(50.0f), (vec3){0.5f, 1.0f, 0.0f});
@@ -230,6 +243,8 @@ int main() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &VBO);
+
+    printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tFPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 
     glfwTerminate();
     return 0;
