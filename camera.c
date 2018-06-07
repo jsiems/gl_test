@@ -22,7 +22,7 @@ void getViewMatrix(struct camera *cam, mat4 view) {
 }
 
 void translateCamera(struct camera *cam, enum camera_movement direction, float delta_time) {
-    float velocity = cam->movement_speed * delta_time;
+    float velocity = (cam->movement_speed + 2.0f * cam->boost * cam->movement_speed) * delta_time;
     if(direction == cam_forward) {
         glm_vec_muladds(cam->front, velocity, cam->position);
     }
@@ -79,4 +79,8 @@ void updateCameraVectors(struct camera *cam) {
     glm_normalize_to(temp, cam->right);
     glm_vec_cross(cam->right, cam->front, temp);
     glm_normalize_to(temp, cam->up);
+}
+
+void boostCamera(struct camera *cam, int boost) {
+    cam->boost = boost;
 }

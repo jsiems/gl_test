@@ -17,6 +17,7 @@ struct camera {
     float yaw;
     float pitch;
 
+    int boost;
     float movement_speed;
     float mouse_sensitivity;
     float zoom;
@@ -40,5 +41,7 @@ void rotateCamera(struct camera *cam, float x_offset, float y_offset, uint8_t co
 void zoomCamera(struct camera *cam, float y_offset);
 
 void updateCameraVectors(struct camera *cam);
+
+void boostCamera(struct camera *cam, int boost);
 
 #endif
