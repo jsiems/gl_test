@@ -38,6 +38,14 @@ void translateCamera(struct camera *cam, enum camera_movement direction, float d
     if(direction == cam_right) {
         glm_vec_muladds(cam->right, velocity, cam->position);
     }
+
+    if(direction == cam_up) {
+        glm_vec_muladds(cam->up, velocity, cam->position);
+    }
+
+    if(direction == cam_down) {
+        glm_vec_muladds(cam->up, -1 * velocity, cam->position);
+    }
 }
 
 void rotateCamera(struct camera *cam, float x_offset, float y_offset, uint8_t constrain_pitch) {

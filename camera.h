@@ -27,7 +27,9 @@ enum camera_movement {
     cam_forward,
     cam_backward,
     cam_left,
-    cam_right
+    cam_right,
+    cam_up,
+    cam_down
 };
 
 void initializeCamera(struct camera *cam, vec3 position, vec3 up, float yaw, float pitch, float movement_speed, float mouse_sensitivity, float zoom);

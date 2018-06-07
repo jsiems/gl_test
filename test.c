@@ -285,6 +285,8 @@ void processInput(GLFWwindow *window, struct camera *cam) {
     int a = glfwGetKey(window, GLFW_KEY_A);
     int s = glfwGetKey(window, GLFW_KEY_S);
     int d = glfwGetKey(window, GLFW_KEY_D);
+    int space = glfwGetKey(window, GLFW_KEY_SPACE);
+    int ctrl = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
     int shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
 
     //quit when escape is pressed
@@ -302,6 +304,12 @@ void processInput(GLFWwindow *window, struct camera *cam) {
     }
     if(d == GLFW_PRESS) {
         translateCamera(cam, cam_right, delta_time);
+    }
+    if(space == GLFW_PRESS) {
+        translateCamera(cam, cam_up, delta_time);
+    }
+    if(ctrl == GLFW_PRESS) {
+        translateCamera(cam, cam_down, delta_time);
     }
     if(shift == GLFW_PRESS) {
         boostCamera(cam, 1);
