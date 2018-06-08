@@ -26,6 +26,8 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
+unsigned int loadTexture(char * name);
+
 
 float delta_time = 0.0f;
 float last_frame = 0.0f;
@@ -62,44 +64,11 @@ int main() {
     initializeCamera(&cam, (vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 1.0f, 0.0f}, -90.0f, 0.0f, 2.5f, 0.1f, 45.0f);
 
 
-    //consider moving texture code to a texture function,
-    //  will clean this area up considerably
     //initialize textures
     unsigned int crate_texture, crate_spec_map;
-    unsigned char *image_data;
-    int image_width, image_height, nr_channels;
+    crate_texture = loadTexture("container2.png");
+    crate_spec_map = loadTexture("container2_specular.png");
 
-    //crate texture
-    glGenTextures(1, &crate_texture);
-    glBindTexture(GL_TEXTURE_2D, crate_texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    image_data = stbi_load("container2.png", &image_width, &image_height, &nr_channels, 0);
-    if(image_data == NULL) {
-        printf("Failed to load container2 texture\n");
-        return -1;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image_data);
-
-    //crate spec map
-    glGenTextures(1, &crate_spec_map);
-    glBindTexture(GL_TEXTURE_2D, crate_spec_map);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    image_data = stbi_load("container2_specular.png", &image_width, &image_height, &nr_channels, 0);
-    if(image_data == NULL) {
-        printf("Failed to load container2_specular texture\n");
-        return -1;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image_data);
 
 
     //-------------vertex data and buffers
@@ -397,4 +366,27 @@ GLFWwindow *initializeWindow() {
     glfwSetScrollCallback(window, scroll_callback);
 
     return window;
+}
+
+unsigned int loadTexture(char * name) {
+    unsigned char *image_data;
+    int image_width, image_height, nr_channels;
+    unsigned int texture;
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    image_data = stbi_load(name, &image_width, &image_height, &nr_channels, 0);
+    if(image_data == NULL) {
+        printf("Failed to load texture %s\n", name);
+        return -1;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(image_data);
+
+    return texture;
 }
