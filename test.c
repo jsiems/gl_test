@@ -235,10 +235,12 @@ int main() {
         vec3 ambient_color;
         glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
         float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
-        float cutoff = cos(degToRad(15.5f));
+        float cutoff = cos(degToRad(12.5f));
+        float outer_cutoff = cos(degToRad(17.5));
         setUniform(&object_shader, "light.position", uniform_float, 3, (void *)cam.position);
         setUniform(&object_shader, "light.direction", uniform_float, 3, (void *)cam.front);
         setUniform(&object_shader, "light.cutoff", uniform_float, 1, (void *)&cutoff);
+        setUniform(&object_shader, "light.outer_cutoff", uniform_float, 1, (void *)&outer_cutoff);
         setUniform(&object_shader, "light.ambient", uniform_float, 3, (void *)ambient_color);
         setUniform(&object_shader, "light.diffuse", uniform_float, 3, (void *)diffuse_color);
         setUniform(&object_shader, "light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
