@@ -234,10 +234,14 @@ int main() {
         glm_vec_mul(light_color, (vec3){0.5f, 0.5f, 0.5f}, diffuse_color);
         vec3 ambient_color;
         glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
-        setUniform(&object_shader, "light.direction", uniform_float, 3, (void *)(vec3){1.0f, 0.3f, 0.5f});
+        float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
+        setUniform(&object_shader, "light.position", uniform_float, 3, (void *)light_pos);
         setUniform(&object_shader, "light.ambient", uniform_float, 3, (void *)ambient_color);
         setUniform(&object_shader, "light.diffuse", uniform_float, 3, (void *)diffuse_color);
         setUniform(&object_shader, "light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+        setUniform(&object_shader, "light.constant", uniform_float, 1, (void *)&light_const);
+        setUniform(&object_shader, "light.linear", uniform_float, 1, (void *)&light_lin);
+        setUniform(&object_shader, "light.quadratic", uniform_float, 1, (void *)&light_quad);
 
         setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
 
