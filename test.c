@@ -70,7 +70,6 @@ int main() {
     crate_spec_map = loadTexture("container2_specular.png");
 
 
-
     //-------------vertex data and buffers
 
     //positions and normal vectors AND texture data
@@ -132,7 +131,12 @@ int main() {
         {-1.3f,  1.0f, -1.5f},
     };
 
-    vec3 light_pos = {1.2f, 1.0f, 2.0f};
+    vec3 point_lights[] = {
+        { 0.7f,  0.2f,  2.0f},
+        { 2.3f, -3.3f, -4.0f},
+        {-4.0f,  2.0f, -12.0f},
+        { 0.0f,  0.0f, -3.0f}
+    };
 
     //cube Vertex array object n such
     unsigned int VAO, VBO;
@@ -197,7 +201,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //construct matrices for camera
-        mat4 model, view, projection;
+        mat4 view, projection;
         getViewMatrix(&cam, view);
         glm_perspective(degToRad(cam.zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
 
@@ -207,11 +211,13 @@ int main() {
         glBindVertexArray(lightVAO);
         setUniform(&light_shader, "view", uniform_matrix, 4, (void *)view);
         setUniform(&light_shader, "projection", uniform_matrix, 4, (void *)projection);
-        glm_translate_make(model, light_pos);
-        glm_scale(model, (vec3){0.2f, 0.2f, 0.2f});
-        setUniform(&light_shader, "model", uniform_matrix, 4, (void *)model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
+        for(int i = 0; i < 4; i ++) {
+            mat4 model;
+            glm_translate_make(model, point_lights[i]);
+            glm_scale(model, (vec3){0.2f, 0.2f, 0.2f});
+            setUniform(&light_shader, "model", uniform_matrix, 4, (void *)model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // ********** OBJECTS UNIFORMS && DRAWING **********
         //Configure uniforms and draw vertices for cubes
@@ -235,18 +241,39 @@ int main() {
         vec3 ambient_color;
         glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
         float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
-        float cutoff = cos(degToRad(12.5f));
-        float outer_cutoff = cos(degToRad(17.5));
-        setUniform(&object_shader, "light.position", uniform_float, 3, (void *)cam.position);
-        setUniform(&object_shader, "light.direction", uniform_float, 3, (void *)cam.front);
-        setUniform(&object_shader, "light.cutoff", uniform_float, 1, (void *)&cutoff);
-        setUniform(&object_shader, "light.outer_cutoff", uniform_float, 1, (void *)&outer_cutoff);
-        setUniform(&object_shader, "light.ambient", uniform_float, 3, (void *)ambient_color);
-        setUniform(&object_shader, "light.diffuse", uniform_float, 3, (void *)diffuse_color);
-        setUniform(&object_shader, "light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
-        setUniform(&object_shader, "light.constant", uniform_float, 1, (void *)&light_const);
-        setUniform(&object_shader, "light.linear", uniform_float, 1, (void *)&light_lin);
-        setUniform(&object_shader, "light.quadratic", uniform_float, 1, (void *)&light_quad);
+        setUniform(&object_shader, "dir_light.direction", uniform_float, 3, (void *)(vec3){-0.2f, -1.0f, -0.3f});
+        setUniform(&object_shader, "dir_light.ambient", uniform_float, 3, (void *)ambient_color);
+        setUniform(&object_shader, "dir_light.diffuse", uniform_float, 3, (void *)diffuse_color);
+        setUniform(&object_shader, "dir_light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+
+        //set uniforms for point lights
+        for(int i = 0; i < 4; i ++) {
+            char uniform[] = "point_lights[i].";
+            uniform[13] = i + '0';
+            char uniform_str[30] = "";
+
+            //uniform_str = "point_lights[i].position"
+            strcpy(uniform_str, uniform); strcat(uniform_str, "position");
+            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)point_lights[i]);
+
+            strcpy(uniform_str, uniform); strcat(uniform_str, "ambient");
+            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)ambient_color);
+
+            strcpy(uniform_str, uniform); strcat(uniform_str, "diffuse");
+            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)diffuse_color);
+
+            strcpy(uniform_str, uniform); strcat(uniform_str, "specular");
+            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+
+            strcpy(uniform_str, uniform); strcat(uniform_str, "constant");
+            setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_const);
+
+            strcpy(uniform_str, uniform); strcat(uniform_str, "linear");
+            setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_lin);
+
+            strcpy(uniform_str, uniform); strcat(uniform_str, "quadratic");
+            setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_quad);
+        }
 
         setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
 
