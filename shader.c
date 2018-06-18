@@ -104,68 +104,50 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     return 1;
 }
 
-//DONT use uniforms for everything, apparently uniform buffers are much better
-void setUniform(struct shader *shdr, const char *name, enum uniform_data_type data_type, uint8_t size, void *data) {
-    uint32_t location;
+//private, only used to get location of uniform
+int32_t getUnifLoc(struct shader *shdr, const char *name) {\
+    int32_t location;
     location = glGetUniformLocation(shdr->id, name);
     if(location == -1) {
         printf("Error locating uniform %s\n", name);
         //maybe in the future don't just exit
         exit(1);
     }
-    switch(data_type) {
-        case uniform_int:
-            switch(size) {
-                case 1:
-                    glUniform1i(location, *(int *)data);
-                break;
-                default:
-                    printf("Error: no uniform int size match: %s %d\n", name, size);
-                    //in future mayve don't exact just return false or something
-                    exit(1);
-                break;
-            }
-        break;
-        case uniform_float:
-            switch(size) {
-                case 1:
-                    glUniform1f(location, *(float *)data);
-                break;
-                case 2:
-                    glUniform2fv(location, 1, (float *)data);
-                break;
-                case 3:
-                    glUniform3fv(location, 1, (float *)data);
-                break;
-                default:
-                    printf("Error: no uniform float size match: %s %d\n", name, size);
-                    exit(1);
-                break;
-            }
-        break;
-        case uniform_matrix:
-            switch(size) {
-                case 2:
-                    glUniformMatrix2fv(location, 1, GL_FALSE, (float *)data);
-                break;
-                case 3:
-                    glUniformMatrix3fv(location, 1, GL_FALSE, (float *)data);
-                break;
-                case 4:
-                    glUniformMatrix4fv(location, 1, GL_FALSE, (float *)data);
-                break;
-                default:
-                    printf("Error: no uniform matrix size match: %s %d\n", name, size);
-                    exit(1);
-                break;
-            }
-        break;
-        default:
-            printf("Error: invalid uniform data type: %s %d\n", name, data_type);
-            exit(1);
-        break;
-    }
+    return location;
 }
 
+void setInt(struct shader *shdr, const char *name, int data) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniform1i(location, data);
+}
 
+void setFloat(struct shader *shdr, const char *name, float data) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniform1f(location, data);
+}
+
+void setVec2(struct shader *shdr, const char *name, float data[2]) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniform2fv(location, 1, data);
+}
+
+void setVec3(struct shader *shdr, const char *name, float data[3]) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniform3fv(location, 1, data);
+}
+
+void setMat2(struct shader *shdr, const char *name, float data[2][2]) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniformMatrix2fv(location, 1, GL_FALSE, (float *)data);
+}
+
+void setMat3(struct shader *shdr, const char *name, float data[3][3]) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniformMatrix3fv(location, 1, GL_FALSE, (float *)data);
+}
+
+void setMat4(struct shader *shdr, const char *name, float data[4][4]) {
+    int32_t location = getUnifLoc(shdr, name);
+    glUniformMatrix4fv(location, 1, GL_FALSE, (float *)data);
+}
 

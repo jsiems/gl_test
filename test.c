@@ -172,10 +172,8 @@ int main() {
 
     //tell the shader which texture to use for which uniform
     glUseProgram(object_shader.id);
-    int temp = 0;
-    setUniform(&object_shader, "material.diffuse", uniform_int, 1, (void *)&temp);
-    temp = 1;
-    setUniform(&object_shader, "material.specular", uniform_int, 1, (void *)&temp);
+    setInt(&object_shader, "material.diffuse", 0);
+    setInt(&object_shader, "material.specular", 1);
 
 
     //keep track of FPS
@@ -211,13 +209,13 @@ int main() {
         //Configure uniforms and draw vertices for light
         glUseProgram(light_shader.id);
         glBindVertexArray(lightVAO);
-        setUniform(&light_shader, "view", uniform_matrix, 4, (void *)view);
-        setUniform(&light_shader, "projection", uniform_matrix, 4, (void *)projection);
+        setMat4(&light_shader, "view", view);
+        setMat4(&light_shader, "projection", projection);
         for(int i = 0; i < 4; i ++) {
             mat4 model;
             glm_translate_make(model, point_lights[i]);
             glm_scale(model, (vec3){0.2f, 0.2f, 0.2f});
-            setUniform(&light_shader, "model", uniform_matrix, 4, (void *)model);
+            setMat4(&light_shader, "model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
@@ -225,12 +223,12 @@ int main() {
         //Configure uniforms and draw vertices for cubes
         glUseProgram(object_shader.id);
         glBindVertexArray(VAO);
-        setUniform(&object_shader, "view", uniform_matrix, 4, (void *)view);
-        setUniform(&object_shader, "projection", uniform_matrix, 4, (void *)projection);
+        setMat4(&object_shader, "view", view);
+        setMat4(&object_shader, "projection", projection);
 
         //sets the objects color and the color of the light hitting the object
         float shininess = 32.0f;
-        setUniform(&object_shader, "material.shininess", uniform_float, 1, (void *)&shininess);
+        setFloat(&object_shader, "material.shininess", shininess);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, crate_texture);
         glActiveTexture(GL_TEXTURE1);
@@ -242,13 +240,14 @@ int main() {
         glm_vec_mul(light_color, (vec3){0.5f, 0.5f, 0.5f}, diffuse_color);
         vec3 ambient_color;
         glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
-        float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
-        setUniform(&object_shader, "dir_light.direction", uniform_float, 3, (void *)(vec3){-0.2f, -1.0f, -0.3f});
-        setUniform(&object_shader, "dir_light.ambient", uniform_float, 3, (void *)ambient_color);
-        setUniform(&object_shader, "dir_light.diffuse", uniform_float, 3, (void *)diffuse_color);
-        setUniform(&object_shader, "dir_light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+        setVec3(&object_shader, "dir_light.direction", (vec3){-0.2f, -1.0f, -0.3f});
+        setVec3(&object_shader, "dir_light.ambient", ambient_color);
+        setVec3(&object_shader, "dir_light.diffuse", diffuse_color);
+        setVec3(&object_shader, "dir_light.specular", (vec3){1.0f, 1.0f, 1.0f});
 
         //set uniforms for point lights
+        
+        float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
         for(int i = 0; i < 4; i ++) {
             char uniform[] = "point_lights[i].";
             uniform[13] = i + '0';
@@ -256,47 +255,47 @@ int main() {
 
             //uniform_str = "point_lights[i].position"
             strcpy(uniform_str, uniform); strcat(uniform_str, "position");
-            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)point_lights[i]);
+            setVec3(&object_shader, uniform_str, point_lights[i]);
 
             strcpy(uniform_str, uniform); strcat(uniform_str, "ambient");
-            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)ambient_color);
+            setVec3(&object_shader, uniform_str, ambient_color);
 
             strcpy(uniform_str, uniform); strcat(uniform_str, "diffuse");
-            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)diffuse_color);
+            setVec3(&object_shader, uniform_str, diffuse_color);
 
             strcpy(uniform_str, uniform); strcat(uniform_str, "specular");
-            setUniform(&object_shader, uniform_str, uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+            setVec3(&object_shader, uniform_str, (vec3){1.0f, 1.0f, 1.0f});
 
             strcpy(uniform_str, uniform); strcat(uniform_str, "constant");
-            setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_const);
+            setFloat(&object_shader, uniform_str, light_const);
 
             strcpy(uniform_str, uniform); strcat(uniform_str, "linear");
-            setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_lin);
+            setFloat(&object_shader, uniform_str, light_lin);
 
             strcpy(uniform_str, uniform); strcat(uniform_str, "quadratic");
-            setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_quad);
+            setFloat(&object_shader, uniform_str, light_quad);
         }
 
         //uniforms for spotlight
         float cutoff = cos(degToRad(12.5f));
         float outer_cutoff = cos(degToRad(17.f));
-        setUniform(&object_shader, "spot_light.position", uniform_float, 3, (void *)cam.position);
-        setUniform(&object_shader, "spot_light.direction", uniform_float, 3, (void *)cam.front);
-        setUniform(&object_shader, "spot_light.constant", uniform_float, 1, (void *)&light_const);
-        setUniform(&object_shader, "spot_light.linear", uniform_float, 1, (void *)&light_lin);
-        setUniform(&object_shader, "spot_light.quadratic", uniform_float, 1, (void *)&light_quad);
-        setUniform(&object_shader, "spot_light.diffuse", uniform_float, 3, (void *)diffuse_color);
-        setUniform(&object_shader, "spot_light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
-        setUniform(&object_shader, "spot_light.cutoff", uniform_float, 1, (void *)&cutoff);
-        setUniform(&object_shader, "spot_light.outer_cutoff", uniform_float, 1, (void *)&outer_cutoff);
-        setUniform(&object_shader, "spot_light.on", uniform_int, 1, (void *)&flashlight_on);
-        setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
+        setVec3(&object_shader, "spot_light.position", cam.position);
+        setVec3(&object_shader, "spot_light.direction", cam.front);
+        setFloat(&object_shader, "spot_light.constant", light_const);
+        setFloat(&object_shader, "spot_light.linear", light_lin);
+        setFloat(&object_shader, "spot_light.quadratic", light_quad);
+        setVec3(&object_shader, "spot_light.diffuse", diffuse_color);
+        setVec3(&object_shader, "spot_light.specular", (vec3){1.0f, 1.0f, 1.0f});
+        setFloat(&object_shader, "spot_light.cutoff", cutoff);
+        setFloat(&object_shader, "spot_light.outer_cutoff", outer_cutoff);
+        setInt(&object_shader, "spot_light.on", flashlight_on);
+        setVec3(&object_shader, "view_pos", cam.position);
 
         for(int i = 0; i < 10; i ++) {
             mat4 model;
             glm_translate_make(model, cubes[i]);
             glm_rotate(model, i * degToRad(20.0f), (vec3){0.5f, 1.0f, 0.0f});
-            setUniform(&object_shader, "model", uniform_matrix, 4, (void *)model);
+            setMat4(&object_shader, "model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
