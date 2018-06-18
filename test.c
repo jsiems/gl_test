@@ -36,6 +36,8 @@ float last_mouse_x = 400;
 float last_mouse_y = 300;
 uint8_t first_mouse = 1;
 
+uint8_t flashlight_on = 0;
+
 struct camera cam;
 
 int main() {
@@ -275,6 +277,19 @@ int main() {
             setUniform(&object_shader, uniform_str, uniform_float, 1, (void *)&light_quad);
         }
 
+        //uniforms for spotlight
+        float cutoff = cos(degToRad(12.5f));
+        float outer_cutoff = cos(degToRad(17.f));
+        setUniform(&object_shader, "spot_light.position", uniform_float, 3, (void *)cam.position);
+        setUniform(&object_shader, "spot_light.direction", uniform_float, 3, (void *)cam.front);
+        setUniform(&object_shader, "spot_light.constant", uniform_float, 1, (void *)&light_const);
+        setUniform(&object_shader, "spot_light.linear", uniform_float, 1, (void *)&light_lin);
+        setUniform(&object_shader, "spot_light.quadratic", uniform_float, 1, (void *)&light_quad);
+        setUniform(&object_shader, "spot_light.diffuse", uniform_float, 3, (void *)diffuse_color);
+        setUniform(&object_shader, "spot_light.specular", uniform_float, 3, (void *)(vec3){1.0f, 1.0f, 1.0f});
+        setUniform(&object_shader, "spot_light.cutoff", uniform_float, 1, (void *)&cutoff);
+        setUniform(&object_shader, "spot_light.outer_cutoff", uniform_float, 1, (void *)&outer_cutoff);
+        setUniform(&object_shader, "spot_light.on", uniform_int, 1, (void *)&flashlight_on);
         setUniform(&object_shader, "view_pos", uniform_float, 3, (void *)cam.position);
 
         for(int i = 0; i < 10; i ++) {
@@ -315,6 +330,7 @@ void processInput(GLFWwindow *window, struct camera *cam) {
     int space = glfwGetKey(window, GLFW_KEY_SPACE);
     int ctrl = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
     int shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
+    int f = glfwGetKey(window, GLFW_KEY_F);
 
     //quit when escape is pressed
     if(escape == GLFW_PRESS)
@@ -343,6 +359,13 @@ void processInput(GLFWwindow *window, struct camera *cam) {
     }
     if(shift == GLFW_RELEASE) {
         boostCamera(cam, 0);
+    }
+
+    if(f == GLFW_PRESS) {
+        flashlight_on = 1;
+    }
+    else if(f == GLFW_RELEASE) {
+        flashlight_on = 0;
     }
 
 }
