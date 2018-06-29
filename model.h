@@ -78,44 +78,6 @@ void initializeModel(struct Model *model, char *filename) {
     fclose(file);
 }
 
-struct List {
-    struct Node*head;
-    struct Node*tail;
-};
-
-struct Node {
-    struct Node *prev;
-    struct Node *next;
-    void *data;
-};
-
-void pushData(struct List *list, void *data) {
-    struct Node *new_node = malloc(sizeof( *new_node));
-    if(list->head == 0) {
-        list->head = new_node;
-        list->tail = new_node;
-        new_node->prev = 0;
-    }
-    else {
-        list->tail->next = new_node;
-        list->tail = new_node;
-        new_node->prev = list->tail;
-    }
-}
-
-void deleteList(struct List *list) {
-    struct Node *current_node = list->head;
-    while(current_node != 0) {
-        free(current_node->data);
-        Node *temp_node = current_node;
-        current_node = current_node->next;
-        free(temp_node);
-    }
-}
-
-void initList(struct List *list) {
-    list->head = 0;
-    list->tail = 0;
-}
 
 #endif
+
