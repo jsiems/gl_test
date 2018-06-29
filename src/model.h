@@ -12,7 +12,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <cglm/cglm.h>
+
+#include "wfc.h"
 
 // TODO: cache textures incase other models use the same texture.
 // This will increase loading times. Maybe create a texture manager
@@ -23,61 +26,99 @@ struct Model {
 };
 
 //will load all textures, vertex data, buffer the data
-void initializeModel(struct Model *model, char *filename) {
+void initializeModel(struct Model *model, char *modelname) {
 
-    // load vertices, vertex texture coords,
-    // vertex normals, etc...
-    FILE *file;
-    file = fopen("test.obj", "r");
+    // basename becomes models/modelname/modelname
+    // add extensions to basename to open files
+    char basename[100] = "models/\0";
+    strcat(basename, modelname);
+    strcat(basename, "/\0");
+    strcat(basename, modelname);
 
-    char line[100];
+    float *verts = getVertices(basename);
 
-    // load vertices into a buffer
-    // load normals into a buffer
-    // load tex coords into a buffer
-    // load indices into a buffer
+    // THIS MIGHT MESS THINGS UP WITH OPENGL
+    // not sure how it will like freeing the memory for 
+    // the vertex data... cause it might already be sent down
+    // but also, it might not be sent down and it might 
+    // be relying on the data we have.
+    free(verts);
+}
 
-    // after everything is loaded, close the file
-    // construct vertex data butter, with size being 
-    // sizeof(float) * num indices * 3 vertices * 3 norms * 2 tex coords
 
-    struct List vertices;
-    initList(vertices);
+// Load model vertices
+// basename is path to file without any extensions
+// ALLOCATES MEMORY FOR RETURN POINTER
+// don't forget to free the memory afterwards
+float *getVertices(char *basename) {
+    char vrtfn[100];
+    strcpy(vrtfn, basename);
+    strcat(vrtfn, ".vrt");
+    char objfn[100];
+    strcpy(objfn, basename);
+    strcat(objfn, ".vrt");
 
-    while(fscanf(file, "%s", line) != -1){
-        if(strcmp(line, "v") == 0) {
-            printf("v line\n");
-            float val1, val2, val3;
-            fscanf(file, "%f %f %f", &val1, &val2, &val3);
-            printf("Values: %f, %f, %f\n", val1, val2, val3);
-        }
-        else if(strcmp(line, "vt") == 0) {
-            printf("texture line\n");
-        else if(strcmp(line, "vn") == 0) {
-            printf("normal line\n");
-            float norm1, norm2, norm3;
-            fscanf(file, "%f %f %f", &norm1, &norm2, &norm3);
-            printf("values: %f, %f, %f\n", norm1, norm2, norm3);
-        }
-            float tex1, tex2;
-            fscanf(file, "%f %f", &tex1, &tex2);
-            printf("values: %f, %f\n", tex1, tex2);
-        }
-        else if(strcmp(line, "vn") == 0) {
-            printf("normal line\n");
-            float norm1, norm2, norm3;
-            fscanf(file, "%f %f %f", &norm1, &norm2, &norm3);
-            printf("values: %f, %f, %f\n", norm1, norm2, norm3);
+    // do check for file
+    // maybe don't do this and make the user of the engine keep track
+    // would be faster... but I would ALWAYS forget to convert it.
+    struct stat result;
+    if(stat(vrtfn, &result) == 0) {
+        printf("file %s exists\n", vrtfn);
+        struct timespec vrt_time = result.st_mtim;
+
+        if(stat(objfn, &result) == 0) {
+            printf("other %s exists\n", objfn);
+            struct timespec obj_time = result.st_mtim;
+            if(obj_time.tv_sec <= vrt_time.tv_sec) {
+                printf("obj newer, generating vrt\n");
+                convertWavefront(objfn);
+            }
+            else {
+                printf("vrt newer, doing nothing\n");
+            }
         }
         else {
-            printf("ignoring line with header: %s\n", line);
-            fgets(line, 100, file);
+            // obj file does not exist, raise an error
+            // if we can find .vrt but not .obj,
+            // do we really care?
+            //printf("ERROR locating %s\n", objfn);
+            //printf("File does not exist?\n");
+            //exit(1);
         }
+    }
+    else {
+        printf("The file %s does not exist\n", filename);
+        strcpy(basename, filename);
+        strcat(filename, ".obj\0");
+        convertWavefront(filename);
+    }
+
+    FILE *file;
+    file = fopen(vrtfn, "rb");
+    if(!file) {
+        printf("ERROR opening %s\n", vrtfn);
+        perror("");
+        exit(1);
+    }
+
+    // read total number of vertices from input file
+    int num_verts;
+    fread(&num_verts, sizeof(num_verts), 1, file);
+    float *verts = malloc(num_verts * FPV * sizeof(*verts));
+    if(!verts) {
+        printf("ERROR: could not allocate memory for verts\n");
+        exit(1);
+    }
+
+    // load all data into verts array
+    for(int i = 0; i < num_verts; i ++) {
+        fread(verts + i * FPV, sizeof(*verts), FPV, file);
     }
 
     fclose(file);
-}
 
+    return verts;
+}
 
 #endif
 
