@@ -9,7 +9,7 @@
 # libraries
 # LIBS=
 
-IDIR =../../
+IDIR =../../src
 CC=gcc
 CFLAGS=-Wall -I$(IDIR) #-L$(LDIR)
 
