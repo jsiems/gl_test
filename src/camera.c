@@ -1,7 +1,7 @@
 
 #include "camera.h"
 
- void initializeCamera(struct camera *cam, vec3 position, vec3 up, float yaw, float pitch, float movement_speed, float mouse_sensitivity, float zoom) {
+ void initializeCamera(struct Camera *cam, vec3 position, vec3 up, float yaw, float pitch, float movement_speed, float mouse_sensitivity, float zoom) {
     glm_vec_copy(position, cam->position);
     glm_vec_copy(up, cam->world_up);
     cam->yaw = yaw;
@@ -15,13 +15,13 @@
     updateCameraVectors(cam);
 }
 
-void getViewMatrix(struct camera *cam, mat4 view) {
+void getViewMatrix(struct Camera *cam, mat4 view) {
     vec3 cam_dir;
     glm_vec_add(cam->position, cam->front, cam_dir);
     glm_lookat(cam->position, cam_dir, cam->up, view);
 }
 
-void translateCamera(struct camera *cam, enum camera_movement direction, float delta_time) {
+void translateCamera(struct Camera *cam, enum camera_movement direction, float delta_time) {
     float velocity = (cam->movement_speed + 2.0f * cam->boost * cam->movement_speed) * delta_time;
     if(direction == cam_forward) {
         glm_vec_muladds(cam->front, velocity, cam->position);
@@ -48,7 +48,7 @@ void translateCamera(struct camera *cam, enum camera_movement direction, float d
     }
 }
 
-void rotateCamera(struct camera *cam, float x_offset, float y_offset, uint8_t constrain_pitch) {
+void rotateCamera(struct Camera *cam, float x_offset, float y_offset, uint8_t constrain_pitch) {
     x_offset *= cam->mouse_sensitivity;
     y_offset *= cam->mouse_sensitivity;
 
@@ -66,7 +66,7 @@ void rotateCamera(struct camera *cam, float x_offset, float y_offset, uint8_t co
     updateCameraVectors(cam);
 }
 
-void zoomCamera(struct camera *cam, float y_offset) {
+void zoomCamera(struct Camera *cam, float y_offset) {
     //can move these constraints to constants
     if(cam->zoom >= 1.0f && cam->zoom <= 45.0f)
         cam->zoom -= y_offset;
@@ -76,7 +76,7 @@ void zoomCamera(struct camera *cam, float y_offset) {
         cam->zoom = 45.0f;
 }
 
-void updateCameraVectors(struct camera *cam) {
+void updateCameraVectors(struct Camera *cam) {
     vec3 temp;
     cam->front[0] = cos(degToRad(cam->yaw)) * cos(degToRad(cam->pitch));
     cam->front[1] = sin(degToRad(cam->pitch));
@@ -89,6 +89,6 @@ void updateCameraVectors(struct camera *cam) {
     glm_normalize_to(temp, cam->up);
 }
 
-void boostCamera(struct camera *cam, int boost) {
+void boostCamera(struct Camera *cam, int boost) {
     cam->boost = boost;
 }

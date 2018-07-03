@@ -1,15 +1,16 @@
 
 #include <stdio.h>
 #include <math.h>
+
 #include <glad/glad.h>              //defines opengl functions, etc
 #include <GLFW/glfw3.h>             //used for window and input
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>              //used to load images
 #include <cglm/cglm.h>              //used for maths
+
+#define STB_IMAGE_IMPLEMENTATION
 
 #include "shader.h"
 #include "camera.h"
-
+#include "model.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
@@ -21,7 +22,7 @@
 #define FPS_LIMIT 60.0f
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window, struct camera *cam);
+void processInput(GLFWwindow *window, struct Camera *cam);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void glfw_error_callback(int code, const char *err_str);
@@ -38,9 +39,10 @@ uint8_t first_mouse = 1;
 
 uint8_t flashlight_on = 0;
 
-struct camera cam;
 uint8_t draw_wireframe = 0;
 uint8_t t_pressed = 0;
+
+struct Camera cam;
 
 int main() {
     //initialize window
@@ -52,75 +54,10 @@ int main() {
     }
     //enable depth test
     glEnable(GL_DEPTH_TEST);
-    //initialize the shaders
-    struct shader object_shader, light_shader;
-    if(!initializeShader(&object_shader, "shaders/object_vs.glsl", "shaders/object_fs.glsl")) {
-        printf("Error initializing object shaders\n");
-        return -1;
-    }
-    if(!initializeShader(&light_shader, "shaders/light_vs.glsl", "shaders/light_fs.glsl")) {
-        printf("Error initializing light shader\n");
-        return -1;
-    }
-
     
     //initialize the camera
     initializeCamera(&cam, (vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 1.0f, 0.0f}, -90.0f, 0.0f, 2.5f, 0.1f, 45.0f);
 
-
-    //initialize textures
-    unsigned int crate_texture, crate_spec_map;
-    crate_texture = loadTexture("container2.png");
-    crate_spec_map = loadTexture("container2_specular.png");
-
-
-    //-------------vertex data and buffers
-
-    //positions and normal vectors AND texture data
-    float vertices[] = {
-        //positions           //normals            //textures 
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,  0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-};
 
     vec3 cubes[] = {
         { 0.0f,  0.0f,  0.0f},
@@ -142,41 +79,11 @@ int main() {
         { 0.0f,  0.0f, -3.0f}
     };
 
-    //cube Vertex array object n such
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    struct Model cube;
+    initializeModel(&cube, "mushroom");
 
-    //bind the vertex array object
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    //position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    //normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    //texture attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    //lamp vertex array object
-    unsigned int lightVAO;
-    glGenVertexArrays(1, &lightVAO);
-    glBindVertexArray(lightVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //we don't need to buffer data for VBO because it has alreayd been done
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    //tell the shader which texture to use for which uniform
-    glUseProgram(object_shader.id);
-    setInt(&object_shader, "material.diffuse", 0);
-    setInt(&object_shader, "material.specular", 1);
-
+    struct Model light;
+    initializeModel(&light, "lightbulb");
 
     //keep track of FPS
     uint64_t total_frames = 0;
@@ -207,110 +114,18 @@ int main() {
         getViewMatrix(&cam, view);
         glm_perspective(degToRad(cam.zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
 
-        // ********** LIGHT UNIFORMS && DRAWING **************
-        //Configure uniforms and draw vertices for light
-        glUseProgram(light_shader.id);
-        glBindVertexArray(lightVAO);
-        setMat4(&light_shader, "view", view);
-        setMat4(&light_shader, "projection", projection);
-        for(int i = 0; i < 4; i ++) {
-            mat4 model;
-            glm_translate_make(model, point_lights[i]);
-            glm_scale(model, (vec3){0.2f, 0.2f, 0.2f});
-            setMat4(&light_shader, "model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        drawModel(&light, 4, point_lights, 4, point_lights,
+                  &view, &projection, &cam, flashlight_on);
 
-        // ********** OBJECTS UNIFORMS && DRAWING **********
-        //Configure uniforms and draw vertices for cubes
-        glUseProgram(object_shader.id);
-        glBindVertexArray(VAO);
-        setMat4(&object_shader, "view", view);
-        setMat4(&object_shader, "projection", projection);
-
-        //sets the objects color and the color of the light hitting the object
-        float shininess = 32.0f;
-        setFloat(&object_shader, "material.shininess", shininess);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, crate_texture);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, crate_spec_map);
-
-        //light colors n such
-        vec3 light_color = {1.0f, 1.0f, 1.0f};
-        vec3 diffuse_color;
-        glm_vec_mul(light_color, (vec3){0.5f, 0.5f, 0.5f}, diffuse_color);
-        vec3 ambient_color;
-        glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
-        setVec3(&object_shader, "dir_light.direction", (vec3){-0.2f, -1.0f, -0.3f});
-        setVec3(&object_shader, "dir_light.ambient", ambient_color);
-        setVec3(&object_shader, "dir_light.diffuse", diffuse_color);
-        setVec3(&object_shader, "dir_light.specular", (vec3){1.0f, 1.0f, 1.0f});
-
-        //set uniforms for point lights
-        
-        float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
-        for(int i = 0; i < 4; i ++) {
-            char uniform[] = "point_lights[i].";
-            uniform[13] = i + '0';
-            char uniform_str[30] = "";
-
-            //uniform_str = "point_lights[i].position"
-            strcpy(uniform_str, uniform); strcat(uniform_str, "position");
-            setVec3(&object_shader, uniform_str, point_lights[i]);
-
-            strcpy(uniform_str, uniform); strcat(uniform_str, "ambient");
-            setVec3(&object_shader, uniform_str, ambient_color);
-
-            strcpy(uniform_str, uniform); strcat(uniform_str, "diffuse");
-            setVec3(&object_shader, uniform_str, diffuse_color);
-
-            strcpy(uniform_str, uniform); strcat(uniform_str, "specular");
-            setVec3(&object_shader, uniform_str, (vec3){1.0f, 1.0f, 1.0f});
-
-            strcpy(uniform_str, uniform); strcat(uniform_str, "constant");
-            setFloat(&object_shader, uniform_str, light_const);
-
-            strcpy(uniform_str, uniform); strcat(uniform_str, "linear");
-            setFloat(&object_shader, uniform_str, light_lin);
-
-            strcpy(uniform_str, uniform); strcat(uniform_str, "quadratic");
-            setFloat(&object_shader, uniform_str, light_quad);
-        }
-
-        //uniforms for spotlight
-        float cutoff = cos(degToRad(12.5f));
-        float outer_cutoff = cos(degToRad(17.f));
-        setVec3(&object_shader, "spot_light.position", cam.position);
-        setVec3(&object_shader, "spot_light.direction", cam.front);
-        setFloat(&object_shader, "spot_light.constant", light_const);
-        setFloat(&object_shader, "spot_light.linear", light_lin);
-        setFloat(&object_shader, "spot_light.quadratic", light_quad);
-        setVec3(&object_shader, "spot_light.diffuse", diffuse_color);
-        setVec3(&object_shader, "spot_light.specular", (vec3){1.0f, 1.0f, 1.0f});
-        setFloat(&object_shader, "spot_light.cutoff", cutoff);
-        setFloat(&object_shader, "spot_light.outer_cutoff", outer_cutoff);
-        setInt(&object_shader, "spot_light.on", flashlight_on);
-        setVec3(&object_shader, "view_pos", cam.position);
-
-        for(int i = 0; i < 10; i ++) {
-            mat4 model;
-            glm_translate_make(model, cubes[i]);
-            glm_rotate(model, i * degToRad(20.0f), (vec3){0.5f, 1.0f, 0.0f});
-            setMat4(&object_shader, "model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        //unbind vertex array
-        glBindVertexArray(0);
+        drawModel(&cube, 10, cubes, 4, point_lights,
+                  &view, &projection, &cam, flashlight_on);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteVertexArrays(1, &lightVAO);
-    glDeleteBuffers(1, &VBO);
+    destroyModel(&cube);
+    destroyModel(&light);
 
     printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tFPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 
@@ -322,7 +137,7 @@ int main() {
 //  keycallback insures that will we handle the input
 //  even if they release the key before we process the input
 //  in the loop
-void processInput(GLFWwindow *window, struct camera *cam) {
+void processInput(GLFWwindow *window, struct Camera *cam) {
     int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
     int w = glfwGetKey(window, GLFW_KEY_W);
     int a = glfwGetKey(window, GLFW_KEY_A);
@@ -442,27 +257,4 @@ GLFWwindow *initializeWindow() {
     glfwSetScrollCallback(window, scroll_callback);
 
     return window;
-}
-
-unsigned int loadTexture(char * name) {
-    unsigned char *image_data;
-    int image_width, image_height, nr_channels;
-    unsigned int texture;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    image_data = stbi_load(name, &image_width, &image_height, &nr_channels, 0);
-    if(image_data == NULL) {
-        printf("Failed to load texture %s\n", name);
-        return -1;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image_data);
-
-    return texture;
 }

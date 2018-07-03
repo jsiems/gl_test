@@ -1,7 +1,7 @@
 
 #include "shader.h"
 
-uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const char *fragment_filename) {
+uint8_t initializeShader(struct Shader *shdr, const char *vertex_filename, const char *fragment_filename) {
     FILE *vertex_file;      //files to be read
     FILE *fragment_file;    //intellisense freaks out here but it is fine
     char *vertex_source;        //source strings from files
@@ -17,15 +17,17 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     fragment_file = fopen(fragment_filename, "rb");
 
     if(vertex_file == NULL) {
-        perror("Error opening vertex file ");
+        printf("Error init vertex shader %s\n", vertex_filename);
+        perror("");
         return 0;
     }
     if(fragment_file == NULL) {
-        perror("Error opening fragment file ");
+        printf("Error init fragment shader %s\n", fragment_filename);
+        perror("");
         return 0;
     }
 
-    //read in the vertex shader
+    //read in the vertex Shader
     fseek(vertex_file, 0L, SEEK_END);
     file_size = ftell(vertex_file);
     rewind(vertex_file);
@@ -40,7 +42,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     }
     vertex_source[file_size] = '\0';
 
-    //read in the fragment shader
+    //read in the fragment Shader
     fseek(fragment_file, 0L, SEEK_END);
     file_size = ftell(fragment_file);
     rewind(fragment_file);
@@ -55,25 +57,25 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
     }
     fragment_source[file_size] = '\0';
 
-    //Vertex shader compilation
+    //Vertex Shader compilation
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, (const char **)&vertex_source, NULL);
     glCompileShader(vertex_shader);
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
     if(!success) {
         glGetShaderInfoLog(vertex_shader, GL_COMPILE_STATUS, NULL, info_log);
-        printf("ERROR: vertex shader compilation failed\n\t%s\n", info_log);
+        printf("ERROR: vertex Shader compilation failed\n\t%s\n", info_log);
         return 0;
     }
 
-    //fragment shader compilation
+    //fragment Shader compilation
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, (const char **)&fragment_source, NULL);
     glCompileShader(fragment_shader);
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
     if(!success) {
         glGetShaderInfoLog(fragment_shader, GL_COMPILE_STATUS, NULL, info_log);
-        printf("ERROR: fragment shader compilation failed\n\t%s\n", info_log);
+        printf("ERROR: fragment Shader compilation failed\n\t%s\n", info_log);
         return 0;
     }
 
@@ -89,7 +91,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
         return 0;
     }
 
-    //vertex and fragment shaders deleted after linking to shader program
+    //vertex and fragment shaders deleted after linking to Shader program
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
@@ -105,7 +107,7 @@ uint8_t initializeShader(struct shader *shdr, const char *vertex_filename, const
 }
 
 //private, only used to get location of uniform
-int32_t getUnifLoc(struct shader *shdr, const char *name) {\
+int32_t getUnifLoc(struct Shader *shdr, const char *name) {\
     int32_t location;
     location = glGetUniformLocation(shdr->id, name);
     if(location == -1) {
@@ -116,37 +118,37 @@ int32_t getUnifLoc(struct shader *shdr, const char *name) {\
     return location;
 }
 
-void setInt(struct shader *shdr, const char *name, int data) {
+void setInt(struct Shader *shdr, const char *name, int data) {
     int32_t location = getUnifLoc(shdr, name);
     glUniform1i(location, data);
 }
 
-void setFloat(struct shader *shdr, const char *name, float data) {
+void setFloat(struct Shader *shdr, const char *name, float data) {
     int32_t location = getUnifLoc(shdr, name);
     glUniform1f(location, data);
 }
 
-void setVec2(struct shader *shdr, const char *name, float data[2]) {
+void setVec2(struct Shader *shdr, const char *name, float data[2]) {
     int32_t location = getUnifLoc(shdr, name);
     glUniform2fv(location, 1, data);
 }
 
-void setVec3(struct shader *shdr, const char *name, float data[3]) {
+void setVec3(struct Shader *shdr, const char *name, float data[3]) {
     int32_t location = getUnifLoc(shdr, name);
     glUniform3fv(location, 1, data);
 }
 
-void setMat2(struct shader *shdr, const char *name, float data[2][2]) {
+void setMat2(struct Shader *shdr, const char *name, float data[2][2]) {
     int32_t location = getUnifLoc(shdr, name);
     glUniformMatrix2fv(location, 1, GL_FALSE, (float *)data);
 }
 
-void setMat3(struct shader *shdr, const char *name, float data[3][3]) {
+void setMat3(struct Shader *shdr, const char *name, float data[3][3]) {
     int32_t location = getUnifLoc(shdr, name);
     glUniformMatrix3fv(location, 1, GL_FALSE, (float *)data);
 }
 
-void setMat4(struct shader *shdr, const char *name, float data[4][4]) {
+void setMat4(struct Shader *shdr, const char *name, float data[4][4]) {
     int32_t location = getUnifLoc(shdr, name);
     glUniformMatrix4fv(location, 1, GL_FALSE, (float *)data);
 }

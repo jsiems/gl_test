@@ -75,6 +75,7 @@ void destroyList(struct List *list) {
 // ***** public *****
 
 void convertWavefront(const char *filename) {
+    printf("Converting %s to .vrt\n", filename);
     // ***** Read data from .obj file *****
     FILE *objfile;
     objfile = fopen(filename, "r");
@@ -105,20 +106,22 @@ void convertWavefront(const char *filename) {
                     data + 2
                   );
             pushData(positions, (void *)data);
+            continue;
         }
 
         // texture data
-        else if(strcmp(line, "vt") == 0) {
+        if(strcmp(line, "vt") == 0) {
             float *data = malloc(2 * sizeof(float));
             fscanf(objfile, "%f %f", 
                     data, 
                     data + 1
                   );
             pushData(texcoords, (void *)data);
+            continue;
         }
 
         // normal data
-        else if(strcmp(line, "vn") == 0) {
+        if(strcmp(line, "vn") == 0) {
             float *data = malloc(3 * sizeof(float));
             fscanf(objfile, "%f %f %f", 
                     data, 
@@ -126,10 +129,11 @@ void convertWavefront(const char *filename) {
                     data + 2
                   );
             pushData(normals, (void *)data);
+            continue;
         }
 
         // index data
-        else if(strcmp(line, "f") == 0) {
+        if(strcmp(line, "f") == 0) {
             int *data = malloc(9 * sizeof(*data));
             fscanf(objfile, "%d/%d/%d %d/%d/%d %d/%d/%d", 
                     data + 0,
@@ -143,6 +147,7 @@ void convertWavefront(const char *filename) {
                     data + 8 
                   );
             pushData(indices, (void *)data);
+            continue;
         }
 
         // ignore (maybe add more line headers in future)
@@ -169,7 +174,9 @@ void convertWavefront(const char *filename) {
     output_file = fopen(fn, "wb");
     
     // output number of vertices
-    fwrite(&indices->size, sizeof(indices->size), 1, output_file);
+    // each index contains 3 vertices, describing one triangle
+    int num_verts = indices->size * 3;
+    fwrite(&num_verts, sizeof(num_verts), 1, output_file);
 
     struct Node *current = indices->head;
     while(current != 0) {

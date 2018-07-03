@@ -42,6 +42,7 @@ int main() {
 
     printf("Comparing converted data to expected data...\n");
 
+    // this is gonna fail from now on
     float expected_results[96] = {
          1.0, 0.0,  1.0, 0.0, -1.0, 0.0, 1.0, 0.0,
         -1.0, 0.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0,

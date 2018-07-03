@@ -7,7 +7,7 @@
 #define degToRad(deg) ((deg) * M_PI / 180.0)
 #define radToDeg(rad) ((rad) * 180.0 / M_PI)
 
-struct camera {
+struct Camera {
     vec3 position;
     vec3 front;
     vec3 up;
@@ -32,18 +32,18 @@ enum camera_movement {
     cam_down
 };
 
-void initializeCamera(struct camera *cam, vec3 position, vec3 up, float yaw, float pitch, float movement_speed, float mouse_sensitivity, float zoom);
+void initializeCamera(struct Camera *cam, vec3 position, vec3 up, float yaw, float pitch, float movement_speed, float mouse_sensitivity, float zoom);
 
-void getViewMatrix(struct camera * cam, mat4 view);
+void getViewMatrix(struct Camera * cam, mat4 view);
 
-void translateCamera(struct camera *cam, enum camera_movement direction, float delta_time);
+void translateCamera(struct Camera *cam, enum camera_movement direction, float delta_time);
 
-void rotateCamera(struct camera *cam, float x_offset, float y_offset, uint8_t constrain_pitch);
+void rotateCamera(struct Camera *cam, float x_offset, float y_offset, uint8_t constrain_pitch);
 
-void zoomCamera(struct camera *cam, float y_offset);
+void zoomCamera(struct Camera *cam, float y_offset);
 
-void updateCameraVectors(struct camera *cam);
+void updateCameraVectors(struct Camera *cam);
 
-void boostCamera(struct camera *cam, int boost);
+void boostCamera(struct Camera *cam, int boost);
 
 #endif
