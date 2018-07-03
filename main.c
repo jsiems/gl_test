@@ -39,6 +39,8 @@ uint8_t first_mouse = 1;
 uint8_t flashlight_on = 0;
 
 struct camera cam;
+uint8_t draw_wireframe = 0;
+uint8_t t_pressed = 0;
 
 int main() {
     //initialize window
@@ -330,6 +332,7 @@ void processInput(GLFWwindow *window, struct camera *cam) {
     int ctrl = glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
     int shift = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
     int f = glfwGetKey(window, GLFW_KEY_F);
+    int t = glfwGetKey(window, GLFW_KEY_T);
 
     //quit when escape is pressed
     if(escape == GLFW_PRESS)
@@ -365,6 +368,21 @@ void processInput(GLFWwindow *window, struct camera *cam) {
     }
     else if(f == GLFW_RELEASE) {
         flashlight_on = 0;
+    }
+
+    if(t == GLFW_PRESS && !t_pressed) {
+        t_pressed = 1;
+        draw_wireframe = ~draw_wireframe;
+        if(draw_wireframe) {
+            // draw wireframes
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+    }
+    else if(t == GLFW_RELEASE) {
+        t_pressed = 0;
     }
 
 }
