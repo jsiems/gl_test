@@ -116,6 +116,7 @@ void convertWavefront(const char *filename) {
                     data, 
                     data + 1
                   );
+            data[1] = 1 - data[1];
             pushData(texcoords, (void *)data);
             continue;
         }

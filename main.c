@@ -85,6 +85,9 @@ int main() {
     struct Model light;
     initializeModel(&light, "lightbulb");
 
+    struct Model crate;
+    initializeModel(&crate, "crate");
+
     //keep track of FPS
     uint64_t total_frames = 0;
     float start_time = glfwGetTime();
@@ -120,12 +123,17 @@ int main() {
         drawModel(&cube, 10, cubes, 4, point_lights,
                   &view, &projection, &cam, flashlight_on);
 
+        vec3 cpos = {1.0f, 1.0f, -1.0f};
+        drawModel(&crate, 1, &cpos, 4, point_lights, 
+                  &view, &projection, &cam, flashlight_on);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     destroyModel(&cube);
     destroyModel(&light);
+    destroyModel(&crate);
 
     printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tFPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 

@@ -121,6 +121,10 @@ void initializeModel(struct Model *model, char *modelname) {
     // don't forget to free this memory
     float *vertices = 0;
     model->num_verts = getVertices(basename, &vertices);
+    
+    for(int i = 0; i < model->num_verts; i ++) {
+        printf("verts[%d] textures: %f, %f\n", i, vertices[i * FPV + 6], vertices[i * FPV + 7]);
+    }
 
     glGenVertexArrays(1, &model->VAO);
     glGenBuffers(1, &model->VBO);
