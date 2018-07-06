@@ -34,7 +34,6 @@
 // in case i ever have very long filenames
 
 struct Model {
-    struct Shader shader;
     unsigned int VAO;
     unsigned int VBO;
     unsigned int texture;
@@ -46,10 +45,8 @@ struct Model {
 void initializeModel(struct Model *model, char *modelname);
 
 // draws model at each position sent into the function
-void drawModel(struct Model *model, int num_positions, vec3 *positions,
-               int num_lights, vec3 *light_positions, 
-               mat4 *view, mat4 *projection, struct Camera *cam,
-               int flashlight_on);
+void drawModel(struct Model *model, struct Shader *shader, 
+               int num_positions, vec3 *positions);
 
 void destroyModel(struct Model *model);
 

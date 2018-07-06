@@ -90,18 +90,6 @@ void initializeModel(struct Model *model, char *modelname) {
     strcat(basename, "/\0");
     strcat(basename, modelname);
 
-    // ***** load shaders *****
-    char vs[100], fs[100];
-    strcpy(vs, basename);
-    strcpy(fs, basename);
-    strcat(vs, "_vs.glsl\0");
-    strcat(fs, "_fs.glsl\0");
-    if(!initializeShader(&model->shader, vs, fs)) {
-        printf("Error initializing %s shaders\n", modelname);
-        exit(1);
-    }
-
-
     // ***** Load textures *****
     char imgfn[100];
     strcpy(imgfn, basename);
@@ -111,21 +99,11 @@ void initializeModel(struct Model *model, char *modelname) {
     strcat(imgfn, "_spec.png");
     model->texture_spec_map = loadTexture(imgfn);
 
-    // tell the shader which texture to use for which uniform
-    glUseProgram(model->shader.id);
-    setInt(&model->shader, "material.diffuse", 0);
-    setInt(&model->shader, "material.specular", 1);
-
-
     // ***** Load vertices *****
     // don't forget to free this memory
     float *vertices = 0;
     model->num_verts = getVertices(basename, &vertices);
     
-    for(int i = 0; i < model->num_verts; i ++) {
-        printf("verts[%d] textures: %f, %f\n", i, vertices[i * FPV + 6], vertices[i * FPV + 7]);
-    }
-
     glGenVertexArrays(1, &model->VAO);
     glGenBuffers(1, &model->VBO);
     glBindVertexArray(model->VAO);
@@ -147,10 +125,8 @@ void initializeModel(struct Model *model, char *modelname) {
 
 // draws model at each position sent into the function
 // TODO: Change this so you can send scale and rotation in also
-void drawModel(struct Model *model, int num_positions, vec3 *positions,
-               int num_lights, vec3 *light_positions, 
-               mat4 *view, mat4 *projection, struct Camera *cam,
-               int flashlight_on) {
+void drawModel(struct Model *model, struct Shader *shader, 
+               int num_positions, vec3 *positions) {
     //bind active textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, model->texture);
@@ -158,77 +134,18 @@ void drawModel(struct Model *model, int num_positions, vec3 *positions,
     glBindTexture(GL_TEXTURE_2D, model->texture_spec_map);
 
     //Configure uniforms and draw vertices for model
-    glUseProgram(model->shader.id);
+    glUseProgram(shader->id);
     glBindVertexArray(model->VAO);
 
-    setMat4(&model->shader, "view", *view);
-    setMat4(&model->shader, "projection", *projection);
-    setVec3(&model->shader, "view_pos", cam->position);
-
-    //sets the objects color and the color of the light hitting the object
+    // TODO: Move this to be contained in .mtl file
     float shininess = 32.0f;
-    setFloat(&model->shader, "material.shininess", shininess);
-
-    //light colors n such
-    vec3 light_color = {1.0f, 1.0f, 1.0f};
-    vec3 diffuse_color;
-    glm_vec_mul(light_color, (vec3){0.5f, 0.5f, 0.5f}, diffuse_color);
-    vec3 ambient_color;
-    glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
-    setVec3(&model->shader, "dir_light.direction", (vec3){-0.2f, -1.0f, -0.3f});
-    setVec3(&model->shader, "dir_light.ambient", ambient_color);
-    setVec3(&model->shader, "dir_light.diffuse", diffuse_color);
-    setVec3(&model->shader, "dir_light.specular", (vec3){1.0f, 1.0f, 1.0f});
-
-    //set uniforms for point lights
-    float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
-    for(int i = 0; i < num_lights; i ++) {
-        char uniform[] = "point_lights[i].";
-        uniform[13] = i + '0';
-        char uniform_str[30] = "";
-
-        //uniform_str = "point_lights[i].position"
-        strcpy(uniform_str, uniform); strcat(uniform_str, "position");
-        setVec3(&model->shader, uniform_str, light_positions[i]);
-
-        strcpy(uniform_str, uniform); strcat(uniform_str, "ambient");
-        setVec3(&model->shader, uniform_str, ambient_color);
-
-        strcpy(uniform_str, uniform); strcat(uniform_str, "diffuse");
-        setVec3(&model->shader, uniform_str, diffuse_color);
-
-        strcpy(uniform_str, uniform); strcat(uniform_str, "specular");
-        setVec3(&model->shader, uniform_str, (vec3){1.0f, 1.0f, 1.0f});
-
-        strcpy(uniform_str, uniform); strcat(uniform_str, "constant");
-        setFloat(&model->shader, uniform_str, light_const);
-
-        strcpy(uniform_str, uniform); strcat(uniform_str, "linear");
-        setFloat(&model->shader, uniform_str, light_lin);
-
-        strcpy(uniform_str, uniform); strcat(uniform_str, "quadratic");
-        setFloat(&model->shader, uniform_str, light_quad);
-    }
-
-    //uniforms for spotlight
-    float cutoff = cos(degToRad(12.5f));
-    float outer_cutoff = cos(degToRad(17.f));
-    setVec3(&model->shader, "spot_light.position", cam->position);
-    setVec3(&model->shader, "spot_light.direction", cam->front);
-    setFloat(&model->shader, "spot_light.constant", light_const);
-    setFloat(&model->shader, "spot_light.linear", light_lin);
-    setFloat(&model->shader, "spot_light.quadratic", light_quad);
-    setVec3(&model->shader, "spot_light.diffuse", diffuse_color);
-    setVec3(&model->shader, "spot_light.specular", (vec3){1.0f, 1.0f, 1.0f});
-    setFloat(&model->shader, "spot_light.cutoff", cutoff);
-    setFloat(&model->shader, "spot_light.outer_cutoff", outer_cutoff);
-    setInt(&model->shader, "spot_light.on", flashlight_on);
+    setFloat(shader, "material.shininess", shininess);
 
     for(int i = 0; i < num_positions; i ++) {
         mat4 pos;
         glm_translate_make(pos, positions[i]);
         glm_rotate(pos, i * degToRad(20.0f), (vec3){0.5f, 1.0f, 0.0f});
-        setMat4(&model->shader, "model", pos);
+        setMat4(shader, "model", pos);
         glDrawArrays(GL_TRIANGLES, 0, model->num_verts);
     }
 

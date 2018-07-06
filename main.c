@@ -27,7 +27,8 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset);
 void glfw_error_callback(int code, const char *err_str);
 GLFWwindow *initializeWindow();
-unsigned int loadTexture(char * name);
+void updateDefaultUniforms(struct Shader *shader, struct Camera *cam, int num_lights,
+                           vec3 *light_positions, int flashlight_on);
 
 
 float delta_time = 0.0f;
@@ -57,6 +58,20 @@ int main() {
     
     //initialize the camera
     initializeCamera(&cam, (vec3){0.0f, 0.0f, 3.0f}, (vec3){0.0f, 1.0f, 0.0f}, -90.0f, 0.0f, 2.5f, 0.1f, 45.0f);
+
+    // initialize default shader
+    struct Shader shader;
+    if(!initializeShader(&shader, "shaders/lighting_vs.glsl", "shaders/lighting_fs.glsl")) {
+        printf("Error initializing shaders\n");
+        exit(1);
+    }
+
+    // tell the shader which texture to use for which uniform
+    // TODO: not sure where to put this...
+    // used to be in model.init, but only needs to be called once!
+    glUseProgram(shader.id);
+    setInt(&shader, "material.diffuse", 0);
+    setInt(&shader, "material.specular", 1);
 
 
     vec3 cubes[] = {
@@ -112,20 +127,14 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        //construct matrices for camera
-        mat4 view, projection;
-        getViewMatrix(&cam, view);
-        glm_perspective(degToRad(cam.zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
+        updateDefaultUniforms(&shader, &cam, 4, point_lights, flashlight_on);
 
-        drawModel(&light, 4, point_lights, 4, point_lights,
-                  &view, &projection, &cam, flashlight_on);
+        drawModel(&light, &shader, 4, point_lights);
 
-        drawModel(&cube, 10, cubes, 4, point_lights,
-                  &view, &projection, &cam, flashlight_on);
+        drawModel(&cube, &shader, 10, cubes);
 
         vec3 cpos = {1.0f, 1.0f, -1.0f};
-        drawModel(&crate, 1, &cpos, 4, point_lights, 
-                  &view, &projection, &cam, flashlight_on);
+        drawModel(&crate, &shader, 1, &cpos);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -265,4 +274,75 @@ GLFWwindow *initializeWindow() {
     glfwSetScrollCallback(window, scroll_callback);
 
     return window;
+}
+
+// name WIP
+// all models using default shader have these same uniforms. So just update them
+// all here!
+void updateDefaultUniforms(struct Shader *shader, struct Camera *cam, int num_lights,
+                           vec3 * light_positions, int flashlight_on) {
+    // construct matrices for camera
+    mat4 view, projection;
+    getViewMatrix(cam, view);
+    glm_perspective(degToRad(cam->zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f, projection);
+    setMat4(shader, "view", view);
+    setMat4(shader, "projection", projection);
+    setVec3(shader, "view_pos", cam->position);
+
+    // lighting uniforms
+    vec3 light_color = {1.0f, 1.0f, 1.0f};
+    vec3 diffuse_color;
+    glm_vec_mul(light_color, (vec3){0.5f, 0.5f, 0.5f}, diffuse_color);
+    vec3 ambient_color;
+    glm_vec_mul(diffuse_color, (vec3){0.2f, 0.2f, 0.2f}, ambient_color);
+    setVec3(shader, "dir_light.direction", (vec3){-0.2f, -1.0f, -0.3f});
+    setVec3(shader, "dir_light.ambient", ambient_color);
+    setVec3(shader, "dir_light.diffuse", diffuse_color);
+    setVec3(shader, "dir_light.specular", (vec3){1.0f, 1.0f, 1.0f});
+
+    //set uniforms for point lights
+    float light_const = 1.0f, light_lin = 0.09f, light_quad = 0.032f;
+    for(int i = 0; i < num_lights; i ++) {
+        char uniform[] = "point_lights[i].";
+        uniform[13] = i + '0';
+        char uniform_str[30] = "";
+
+        //uniform_str = "point_lights[i].position"
+        strcpy(uniform_str, uniform); strcat(uniform_str, "position");
+        setVec3(shader, uniform_str, light_positions[i]);
+
+        strcpy(uniform_str, uniform); strcat(uniform_str, "ambient");
+        setVec3(shader, uniform_str, ambient_color);
+
+        strcpy(uniform_str, uniform); strcat(uniform_str, "diffuse");
+        setVec3(shader, uniform_str, diffuse_color);
+
+        strcpy(uniform_str, uniform); strcat(uniform_str, "specular");
+        setVec3(shader, uniform_str, (vec3){1.0f, 1.0f, 1.0f});
+
+        strcpy(uniform_str, uniform); strcat(uniform_str, "constant");
+        setFloat(shader, uniform_str, light_const);
+
+        strcpy(uniform_str, uniform); strcat(uniform_str, "linear");
+        setFloat(shader, uniform_str, light_lin);
+
+        strcpy(uniform_str, uniform); strcat(uniform_str, "quadratic");
+        setFloat(shader, uniform_str, light_quad);
+    }
+
+    //uniforms for spotlight
+    float cutoff = cos(degToRad(12.5f));
+    float outer_cutoff = cos(degToRad(17.f));
+    setVec3(shader, "spot_light.position", cam->position);
+    setVec3(shader, "spot_light.direction", cam->front);
+    setFloat(shader, "spot_light.constant", light_const);
+    setFloat(shader, "spot_light.linear", light_lin);
+    setFloat(shader, "spot_light.quadratic", light_quad);
+    setVec3(shader, "spot_light.diffuse", diffuse_color);
+    setVec3(shader, "spot_light.specular", (vec3){1.0f, 1.0f, 1.0f});
+    setFloat(shader, "spot_light.cutoff", cutoff);
+    setFloat(shader, "spot_light.outer_cutoff", outer_cutoff);
+    setInt(shader, "spot_light.on", flashlight_on);
+
+    //should be it?
 }
