@@ -125,8 +125,8 @@ void initializeModel(struct Model *model, char *modelname) {
 
 // draws model at each position sent into the function
 // TODO: Change this so you can send scale and rotation in also
-void drawModel(struct Model *model, struct Shader *shader, 
-               int num_positions, vec3 *positions) {
+void drawModels(struct Model *model, struct Shader *shader, 
+               int amount, vec3 *positions, vec3 *rotations, vec3 *scales) {
     //bind active textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, model->texture);
@@ -141,11 +141,15 @@ void drawModel(struct Model *model, struct Shader *shader,
     float shininess = 32.0f;
     setFloat(shader, "material.shininess", shininess);
 
-    for(int i = 0; i < num_positions; i ++) {
-        mat4 pos;
-        glm_translate_make(pos, positions[i]);
-        glm_rotate(pos, i * degToRad(20.0f), (vec3){0.5f, 1.0f, 0.0f});
-        setMat4(shader, "model", pos);
+    for(int i = 0; i < amount; i ++) {
+        mat4 transformation;
+        glm_translate_make(transformation, positions[i]);
+        // not sure this is a great way to accomplish rotation
+        vec3 norm;
+        glm_vec_normalize_to(rotations[i], norm);
+        glm_rotate(transformation, glm_vec_norm(rotations[i]), norm);
+        glm_scale(transformation, scales[i]);
+        setMat4(shader, "model", transformation);
         glDrawArrays(GL_TRIANGLES, 0, model->num_verts);
     }
 

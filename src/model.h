@@ -45,8 +45,8 @@ struct Model {
 void initializeModel(struct Model *model, char *modelname);
 
 // draws model at each position sent into the function
-void drawModel(struct Model *model, struct Shader *shader, 
-               int num_positions, vec3 *positions);
+void drawModels(struct Model *model, struct Shader *shader, 
+               int amount, vec3 *positions, vec3 *rotations, vec3 *scales);
 
 void destroyModel(struct Model *model);
 
