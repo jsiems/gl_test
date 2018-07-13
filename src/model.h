@@ -34,11 +34,16 @@
 // in case i ever have very long filenames
 
 struct Model {
+    struct Mesh *meshes;
+    int num_meshes;
+};
+
+struct Mesh {
     unsigned int VAO;
     unsigned int VBO;
+    unsigned int num_verts;
     unsigned int texture;
     unsigned int texture_spec_map;
-    unsigned int num_verts;
 };
 
 //will load all textures, vertex data, buffer the data

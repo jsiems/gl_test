@@ -11,7 +11,7 @@
 
 IDIR =../../src
 CC=gcc
-CFLAGS=-Wall -I$(IDIR) #-L$(LDIR)
+CFLAGS=-Wall -g -I$(IDIR) #-L$(LDIR)
 
 # hide .o files in obj directory
 ODIR=../../obj

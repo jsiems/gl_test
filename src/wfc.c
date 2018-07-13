@@ -3,6 +3,17 @@
 
 // ***** private *****
 
+struct Mesh {
+    struct Material *mat;
+    int num_indices;
+    int start_pos;
+};
+
+struct Material {
+    char name[100];
+    char texture_name[100];
+};
+
 struct List {
     struct Node *head;
     struct Node *tail;
@@ -76,6 +87,57 @@ void destroyList(struct List *list) {
 
 void convertWavefront(const char *filename) {
     printf("Converting %s to .vrt\n", filename);
+    // TODO: read material filename from .obj instead of
+    // assuming it will have the same name. This might 
+    // burn me someday
+
+    // ***** Read data from materials file *****
+
+    //convert .obj to .mtl
+    char fn[100];
+    strcpy(fn, filename);
+    char *loc = strrchr(fn, '.');
+    int index = loc - fn;
+    fn[index] = '\0';
+    strcat(fn, ".mtl");
+
+    FILE *matfile;
+    matfile = fopen(fn, "r");
+    if(!matfile) {
+        printf("ERROR opening %s:", fn);
+        perror("");
+        exit(1);
+    }
+
+    struct List *materials = initList();
+    // might need to increase size of a single line someday
+    char line[100];
+
+    while(fscanf(matfile, "%s", line) != -1) {
+        if(strcmp(line, "newmtl") == 0) {
+            fscanf(matfile, "%s", line);
+            struct Material *newmat = malloc(sizeof(struct Material));
+            strcpy(newmat->name, line);
+
+            pushData(materials, (void *)newmat);
+
+            continue;
+        }
+
+        if(strcmp(line, "map_Kd") == 0) {
+            fscanf(matfile, "%s", line);
+            struct Material *mat = (struct Material *)materials->tail->data;
+            strcpy(mat->texture_name, line);
+            continue;
+        }
+
+        char c = '0';
+        while(c != '\n')
+            c = fgetc(matfile);
+    }
+
+    fclose(matfile);
+
     // ***** Read data from .obj file *****
     FILE *objfile;
     objfile = fopen(filename, "r");
@@ -86,13 +148,11 @@ void convertWavefront(const char *filename) {
         exit(1);
     }
 
-    // might need to increase size of a single line someday
-    char line[100];
-
     struct List *positions = initList();
     struct List *normals = initList();
     struct List *texcoords = initList();
     struct List *indices = initList();
+    struct List *meshes = initList();
 
     while(fscanf(objfile, "%s", line) != -1) {
 
@@ -116,6 +176,9 @@ void convertWavefront(const char *filename) {
                     data, 
                     data + 1
                   );
+            // why did I do this? I forget.
+            // something to do with the images need
+            // to be flipped along the y axis
             data[1] = 1 - data[1];
             pushData(texcoords, (void *)data);
             continue;
@@ -133,6 +196,26 @@ void convertWavefront(const char *filename) {
             continue;
         }
 
+        // material information
+        if(strcmp(line, "usemtl") == 0) {
+            struct Mesh *newmesh = malloc(sizeof(*newmesh));
+            fscanf(objfile, "%s", line);
+            struct Node *node = materials->head;
+            struct Material *current = (struct Material *)node->data;
+            while(strcmp(line, current->name) != 0) {
+                node = node->next;
+                if(node == 0) {
+                    printf("unable to find material %s in materials list\n", line);
+                    exit(1);
+                }
+                current = (struct Material *)node->data;
+            }
+            newmesh->mat = (struct Material *)node->data;
+            newmesh->start_pos = indices->size;
+            newmesh->num_indices = 0;
+            pushData(meshes, (void *)newmesh);
+        }
+
         // index data
         if(strcmp(line, "f") == 0) {
             int *data = malloc(9 * sizeof(*data));
@@ -148,13 +231,13 @@ void convertWavefront(const char *filename) {
                     data + 8 
                   );
             pushData(indices, (void *)data);
+            struct Mesh *tail = (struct Mesh *)meshes->tail->data;
+            tail->num_indices += 1;
             continue;
         }
 
         // ignore (maybe add more line headers in future)
-        else {
-            fgets(line, 100, objfile);
-        }
+        fgets(line, 100, objfile);
     }
 
     fclose(objfile);
@@ -163,46 +246,67 @@ void convertWavefront(const char *filename) {
 
     // creates output file name by removing .obj
     // from input and replacing it with .vrt
-    char fn[100];
-    char *loc;
     strcpy(fn, filename);
     loc = strrchr(fn, '.');
-    int index = loc - fn;
+    index = loc - fn;
     fn[index] = '\0';
     strcat(fn, ".vrt\0");
 
     FILE *output_file;
     output_file = fopen(fn, "wb");
     
-    // output number of vertices
-    // each index contains 3 vertices, describing one triangle
-    int num_verts = indices->size * 3;
-    fwrite(&num_verts, sizeof(num_verts), 1, output_file);
+    //write the total number of meshes in this model
+    int num_meshes = meshes->size;
+    fwrite(&num_meshes, sizeof(num_meshes), 1, output_file);
 
-    struct Node *current = indices->head;
-    while(current != 0) {
-        int *index_data = (int *)current->data;
-        for(int i = 0; i < 8; i += 3) {
+    struct Node *current_mesh = meshes->head;
+    while(current_mesh != 0) {
+        // output size of texture file name (wihtout extension)
+        char texname[100];
+        struct Mesh *mesh = (struct Mesh *)current_mesh->data;
+        struct Material *mat = mesh->mat;
+        strcpy(texname, mat->texture_name);
+        int index = strrchr(texname, '.') - texname;
+        texname[index] = '\0';
 
-            float *pos = (float *)getData(positions, index_data[i + 0] - 1);
-            float *tex = (float *)getData(texcoords, index_data[i + 1] - 1);
-            float *norm = (float *)getData(normals, index_data[i + 2] - 1);
+        // write sixe of texture name
+        int size = strlen(texname);
+        fwrite(&size, sizeof(size), 1, output_file);
 
-            fwrite(pos, sizeof(*pos), 3, output_file);
-            fwrite(norm, sizeof(*norm), 3, output_file);
-            fwrite(tex, sizeof(*tex), 2, output_file);
+        //write the texture name (NO EXTENSION)
+        fwrite(texname, sizeof(*texname), size, output_file);
+
+        // write number of vertices in this mesh
+        // each index has 3 vertices, hence the * 3
+        int num_verts = mesh->num_indices * 3;
+        fwrite(&num_verts, sizeof(num_verts), 1, output_file);
+        
+        // output the vertex data
+        for(int i = 0; i < mesh->num_indices; i ++) {
+            int *index_data = (int *)getData(indices, mesh->start_pos + i);
+            for(int j = 0; j < 8; j += 3) {
+
+                float *pos = (float *)getData(positions, index_data[j + 0] - 1);
+                float *tex = (float *)getData(texcoords, index_data[j + 1] - 1);
+                float *norm = (float *)getData(normals, index_data[j + 2] - 1);
+
+                fwrite(pos, sizeof(*pos), 3, output_file);
+                fwrite(norm, sizeof(*norm), 3, output_file);
+                fwrite(tex, sizeof(*tex), 2, output_file);
+            }
         }
-        current = current->next;
-    }
 
+        current_mesh = current_mesh->next;
+    }
+    
     fclose(output_file);
 
-    // destroy all malloced data
-
+    destroyList(materials);
     destroyList(positions);
     destroyList(normals);
     destroyList(texcoords);
     destroyList(indices);
+    destroyList(meshes);
 
     return;
 }
