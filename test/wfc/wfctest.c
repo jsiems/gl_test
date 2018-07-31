@@ -162,6 +162,8 @@ int main() {
         exit(1);
     }
 
+    // read .vrt data
+
     int num_meshes;
     fread(&num_meshes, sizeof(num_meshes), 1, file);
 
@@ -202,9 +204,7 @@ int main() {
         }
 
         float *verts = malloc(num_verts * FPV * sizeof(*verts));
-        for(int j = 0; j < num_verts; j ++) {
-            fread(verts + j * FPV, sizeof(*verts), FPV, file);
-        }
+        fread(verts, sizeof(*verts), FPV * num_verts, file);
         
         // check for matches here
         for(int j = 0; j < num_verts; j ++) {
