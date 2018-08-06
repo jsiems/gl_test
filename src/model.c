@@ -1,29 +1,6 @@
 
 #include "model.h"
 
-unsigned int loadTexture(char * name) {
-    unsigned char *image_data;
-    int image_width, image_height, nr_channels;
-    unsigned int texture;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    image_data = stbi_load(name, &image_width, &image_height, &nr_channels, 0);
-    if(image_data == NULL) {
-        printf("Failed to load texture %s\n", name);
-        return -1;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image_data);
-
-    return texture;
-}
-
 void initializeModel(struct Model *model, char *modelname) {
 
     // basename becomes models/modelname/modelname
@@ -83,8 +60,8 @@ void initializeModel(struct Model *model, char *modelname) {
         fread(&name_len, sizeof(name_len), 1, file);
         char *name = malloc(name_len + 1);
         fread(name, sizeof(*name), name_len, file);
-        texname[name_len] = '\0';
         char *texname = malloc(name_len + 20);
+        texname[name_len] = '\0';
         // load texture
         strcpy(texname, "textures/\0");
         strcat(texname, name);

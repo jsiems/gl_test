@@ -15,7 +15,6 @@
 #include <math.h>
 #include <sys/stat.h>
 
-#include <stb_image.h>              //used to load images
 #include <cglm/cglm.h>
 #include <glad/glad.h>              //defines opengl functions, etc
 

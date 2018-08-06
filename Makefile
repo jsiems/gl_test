@@ -1,8 +1,5 @@
+# main make file
 
-# cmake tutorial here: http://www.cs.colby.edu/maxwell/courses/tutorials/maketutor/
-# ver gud
-
-# library settings untested
 # library directories
 LDIR=-Llib -Ilib
 
