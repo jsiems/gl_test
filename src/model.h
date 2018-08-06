@@ -22,6 +22,7 @@
 #include "wfc.h"
 #include "shader.h"
 #include "camera.h"
+#include "texman.h"
 
 #define FPV 8
 
@@ -46,7 +47,7 @@ struct Mesh {
 };
 
 //will load all textures, vertex data, buffer the data
-void initializeModel(struct Model *model, char *modelname);
+void initializeModel(struct Model *model, struct TexMan *texman, char *modelname);
 
 // draws model at each position sent into the function
 void drawModels(struct Model *model, struct Shader *shader, 

@@ -27,7 +27,7 @@ int main() {
         exit(1);
     }
 
-    if(/*car1 == side1*/0) {
+    if(car1 == side1) {
         printf("ERROR: car and side are equal\n");
         exit(1);
     }

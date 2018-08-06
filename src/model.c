@@ -1,7 +1,7 @@
 
 #include "model.h"
 
-void initializeModel(struct Model *model, char *modelname) {
+void initializeModel(struct Model *model, struct TexMan *texman, char *modelname) {
 
     // basename becomes models/modelname/modelname
     // add extensions to basename to open files
@@ -60,23 +60,19 @@ void initializeModel(struct Model *model, char *modelname) {
         fread(&name_len, sizeof(name_len), 1, file);
         char *name = malloc(name_len + 1);
         fread(name, sizeof(*name), name_len, file);
-        char *texname = malloc(name_len + 20);
-        texname[name_len] = '\0';
         // load texture
-        strcpy(texname, "textures/\0");
-        strcat(texname, name);
-        strcat(texname, ".png\0");
-        newmesh.texture = loadTexture(texname);
+        newmesh.texture = getTextureId(texman, name);
         // TODO: allow spec map to be passed in with function
         //       or a part of the .vrt
         // load spec map
-        strcpy(texname, "textures/\0");
-        strcat(texname, name);
-        strcat(texname, "_spec.png\0");
-        newmesh.texture_spec_map = loadTexture(texname);
+        char *specname = malloc(name_len + 7);
+        strcpy(specname, name);
+        specname[name_len] = '\0';
+        strcat(specname, "_spec\0");
+        newmesh.texture_spec_map = getTextureId(texman, specname);
         // free texture name strings
         free(name);
-        free(texname);
+        free(specname);
 
         // read number of vertices
         int num_verts;

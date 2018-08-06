@@ -11,6 +11,7 @@
 #include "shader.h"
 #include "camera.h"
 #include "model.h"
+#include "texman.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
@@ -73,6 +74,10 @@ int main() {
     setInt(&shader, "material.diffuse", 0);
     setInt(&shader, "material.specular", 1);
 
+    // initialize the texture manager
+    struct TexMan texman;
+    initTexMan(&texman);
+
 
     vec3 cubes[] = {
         { 0.0f,  0.0f,  0.0f},
@@ -100,7 +105,7 @@ int main() {
     };
 
     struct Model crate;
-    initializeModel(&crate, "house");
+    initializeModel(&crate, &texman, "house");
 
     //keep track of FPS
     uint64_t total_frames = 0;
@@ -170,6 +175,7 @@ int main() {
     }
 
     destroyModel(&crate);
+    destroyTexMan(&texman)
 
     printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tFPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 
