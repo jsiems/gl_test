@@ -10,8 +10,8 @@ struct Mesh {
 };
 
 struct Material {
-    char name[100];
-    char texture_name[100];
+    char *name;
+    char *texture_name;
 };
 
 struct List {
@@ -119,6 +119,7 @@ void convertWavefront(const char *objfn) {
         if(strcmp(line, "newmtl") == 0) {
             fscanf(matfile, "%s", line);
             struct Material *newmat = malloc(sizeof(struct Material));
+            newmat->name = malloc(sizeof(*newmat->name) * (strlen(line) + 1));
             strcpy(newmat->name, line);
 
             pushData(materials, (void *)newmat);
@@ -129,6 +130,7 @@ void convertWavefront(const char *objfn) {
         if(strcmp(line, "map_Kd") == 0) {
             fscanf(matfile, "%s", line);
             struct Material *mat = (struct Material *)materials->tail->data;
+            mat->texture_name = malloc(sizeof(*mat->texture_name) * (strlen(line) + 1));
             strcpy(mat->texture_name, line);
             continue;
         }
@@ -311,6 +313,14 @@ void convertWavefront(const char *objfn) {
     }
     
     fclose(output_file);
+
+    struct Node *current = materials->head;
+    while(current != 0) {
+        struct Material *mat = (struct Material *)current->data;
+        free(mat->name);
+        free(mat->texture_name);
+        current = current->next;
+    }
 
     destroyList(materials);
     destroyList(positions);
