@@ -5,18 +5,23 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
 
     // basename becomes models/modelname/modelname
     // add extensions to basename to open files
-    char basename[100] = "models/\0";
+    int mn_length = strlen(modelname);
+    char *basename = malloc(sizeof(*basename) * (2 * mn_length + 9));
+    strcpy(basename, "models/\0");
     strcat(basename, modelname);
     strcat(basename, "/\0");
     strcat(basename, modelname);
     
     // models/modelname/modelname.vrt, modelname.obj
-    char vrtfn[100];
+    int bn_length = strlen(basename);
+    char *vrtfn = malloc(sizeof(*vrtfn) * (bn_length + 5));
     strcpy(vrtfn, basename);
-    strcat(vrtfn, ".vrt");
-    char objfn[100];
+    strcat(vrtfn, ".vrt\0");
+    char *objfn = malloc(sizeof(*objfn) * (bn_length + 5));
     strcpy(objfn, basename);
-    strcat(objfn, ".obj");
+    strcat(objfn, ".obj\0");
+    
+    free(basename);
 
     // check for and convert .obj to .vrt if .vrt is older or nonexistent
     struct stat result;
@@ -34,6 +39,8 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
         convertWavefront(objfn);
     }
 
+    free(objfn);
+
     FILE *file;
     file = fopen(vrtfn, "rb");
     if(!file) {
@@ -41,6 +48,9 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
         perror("");
         exit(1);
     }
+
+
+    free(vrtfn);
 
     // read total number of meshes
     int num_meshes;
@@ -55,11 +65,14 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
     for(int i = 0; i < num_meshes; i ++) {
         struct Mesh newmesh;
 
-        // read texture name, convert to 'textures/name.png'
+        // read texture name
         int name_len;
         fread(&name_len, sizeof(name_len), 1, file);
         char *name = malloc(name_len + 1);
-        fread(name, sizeof(*name), name_len, file);
+        if( fread(name, sizeof(*name), name_len, file) != name_len) {
+            printf("error reading texture name \n");
+            exit(1);
+        }
         // load texture
         newmesh.texture = getTextureId(texman, name);
         // TODO: allow spec map to be passed in with function
@@ -76,7 +89,7 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
 
         // read number of vertices
         int num_verts;
-        fread(num_verts, sizeof(num_verts), 1, file);
+        fread(&num_verts, sizeof(num_verts), 1, file);
         newmesh.num_verts = num_verts;
 
         // read vertex data
@@ -84,8 +97,8 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
         fread(verts, sizeof(*verts), FPV * num_verts, file);
 
         // generate buffer and array objects
-        int VAO, VBO;
-        glGenVertexArrays(1, &VAO);
+        unsigned int VAO, VBO;
+        /*glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glBindVertexArray(VAO);
         glBinderBuffer(GL_ARRAY_BUFFER, VBO);
@@ -98,7 +111,7 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, FPV * sizeof(float), (void*)(6 * sizeof(float)));
 
-        glBindVertexArray(0);
+        glBindVertexArray(0);*/VAO = 0; VBO = 0;
 
         free(verts);
         newmesh.VAO = VAO;
@@ -109,17 +122,11 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
     fclose(file);
 }
 
-void drawModels(struct Model *model, struct Shader *shader, int amount, vec3 *positions, vec3 *rotations, vec3 *scales) {
-    for(int i = 0; i < model->num_meshes; i ++) {
-        drawMeshes(&model->meshes[i], shader, amount, positions, rotations, scales);
-    }
-}
-
 // draws model at each position sent into the function
 void drawMeshes(struct Mesh *mesh, struct Shader *shader, 
                int amount, vec3 *positions, vec3 *rotations, vec3 *scales) {
     //bind active textures
-    glActiveTexture(GL_TEXTURE0);
+    /*glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mesh->texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, mesh->texture_spec_map);
@@ -144,15 +151,26 @@ void drawMeshes(struct Mesh *mesh, struct Shader *shader,
         glDrawArrays(GL_TRIANGLES, 0, mesh->num_verts);
     }
 
-    glBindVertexArray(0);
+    glBindVertexArray(0);*/
 
     return;
 }
 
+void drawModels(struct Model *model, struct Shader *shader, int amount, vec3 *positions, vec3 *rotations, vec3 *scales) {
+    for(int i = 0; i < model->num_meshes; i ++) {
+        drawMeshes(&model->meshes[i], shader, amount, positions, rotations, scales);
+    }
+}
+
+
 void destroyModel(struct Model *model) {
     //anything else to destroy?
-    glDeleteVertexArrays(1, &model->VAO);
-    glDeleteBuffers(1, &model->VBO);
+
+    for(int i = 0; i < model->num_meshes; i ++) {
+        //struct Mesh current = model->meshes[i];
+        //glDeleteVertexArrays(1, &current->VAO);
+        //glDeleteBuffers(1, &current->VBO);
+    }
 
     free(model->meshes);
 

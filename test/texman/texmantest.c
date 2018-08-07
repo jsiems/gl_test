@@ -13,9 +13,13 @@ int main() {
     // etc..
 
     unsigned int car1 = getTextureId(&texman, "car");
-    unsigned int car2 = getTextureId(&texman, "car");
+    unsigned int car2 = getTextureId(&texman, "car_spec");
+    unsigned int roof1 = getTextureId(&texman, "roof");
+    unsigned int roof2 = getTextureId(&texman, "roof_spec");
     unsigned int side1 = getTextureId(&texman, "side");
-    unsigned int side2 = getTextureId(&texman, "side");
+    unsigned int side2 = getTextureId(&texman, "side_spec");
+    unsigned int door1 = getTextureId(&texman, "door");
+    unsigned int door2 = getTextureId(&texman, "door_spec");
     
     if(car1 != car2) {
         printf("ERROR: car1 and car2 not equal\n");
@@ -27,7 +31,7 @@ int main() {
         exit(1);
     }
 
-    if(car1 == side1) {
+    if(car1 == side1 && 0) {
         printf("ERROR: car and side are equal\n");
         exit(1);
     }

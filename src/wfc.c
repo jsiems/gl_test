@@ -85,33 +85,35 @@ void destroyList(struct List *list) {
 
 // ***** public *****
 
-void convertWavefront(const char *filename) {
-    printf("Converting %s to .vrt\n", filename);
-    // TODO: read material filename from .obj instead of
+void convertWavefront(const char *objfn) {
+    printf("Converting %s to .vrt\n", objfn);
+    // TODO: read material objfn from .obj instead of
     // assuming it will have the same name. This might 
     // burn me someday
 
     // ***** Read data from materials file *****
 
     //convert .obj to .mtl
-    char fn[100];
-    strcpy(fn, filename);
-    char *loc = strrchr(fn, '.');
-    int index = loc - fn;
-    fn[index] = '\0';
-    strcat(fn, ".mtl");
+    char *matfn = malloc(sizeof(*matfn) *(strlen(objfn) + 1));
+    strcpy(matfn, objfn);
+    char *loc = strrchr(matfn, '.');
+    int index = loc - matfn;
+    matfn[index] = '\0';
+    strcat(matfn, ".mtl");
 
     FILE *matfile;
-    matfile = fopen(fn, "r");
+    matfile = fopen(matfn, "r");
     if(!matfile) {
-        printf("ERROR opening %s:", fn);
+        printf("ERROR opening %s:", matfn);
         perror("");
         exit(1);
     }
+    
+    free(matfn);
 
     struct List *materials = initList();
     // might need to increase size of a single line someday
-    char line[100];
+    char line[256];
 
     while(fscanf(matfile, "%s", line) != -1) {
         if(strcmp(line, "newmtl") == 0) {
@@ -140,10 +142,10 @@ void convertWavefront(const char *filename) {
 
     // ***** Read data from .obj file *****
     FILE *objfile;
-    objfile = fopen(filename, "r");
+    objfile = fopen(objfn, "r");
 
     if(!objfile) {
-        printf("ERROR opening %s:", filename);
+        printf("ERROR opening %s\n", objfn);
         perror("");
         exit(1);
     }
@@ -246,14 +248,22 @@ void convertWavefront(const char *filename) {
 
     // creates output file name by removing .obj
     // from input and replacing it with .vrt
-    strcpy(fn, filename);
-    loc = strrchr(fn, '.');
-    index = loc - fn;
-    fn[index] = '\0';
-    strcat(fn, ".vrt\0");
+    char *vrtfn = malloc(sizeof(*vrtfn) *(strlen(objfn) + 1));
+    strcpy(vrtfn, objfn);
+    loc = strrchr(vrtfn, '.');
+    index = loc - vrtfn;
+    vrtfn[index] = '\0';
+    strcat(vrtfn, ".vrt\0");
 
     FILE *output_file;
-    output_file = fopen(fn, "wb");
+    output_file = fopen(vrtfn, "wb");
+    if(!output_file) {
+        printf("ERROR opening %s\n", vrtfn);
+        perror("");
+        exit(1);
+    }
+
+    free(vrtfn);
     
     //write the total number of meshes in this model
     int num_meshes = meshes->size;
@@ -262,9 +272,10 @@ void convertWavefront(const char *filename) {
     struct Node *current_mesh = meshes->head;
     while(current_mesh != 0) {
         // output size of texture file name (wihtout extension)
-        char texname[100];
         struct Mesh *mesh = (struct Mesh *)current_mesh->data;
         struct Material *mat = mesh->mat;
+
+        char *texname = malloc(sizeof(*texname) * (strlen(mat->texture_name) + 1));
         strcpy(texname, mat->texture_name);
         int index = strrchr(texname, '.') - texname;
         texname[index] = '\0';
@@ -272,9 +283,9 @@ void convertWavefront(const char *filename) {
         // write sixe of texture name
         int size = strlen(texname);
         fwrite(&size, sizeof(size), 1, output_file);
-
         //write the texture name (NO EXTENSION)
         fwrite(texname, sizeof(*texname), size, output_file);
+        free(texname);
 
         // write number of vertices in this mesh
         // each index has 3 vertices, hence the * 3
