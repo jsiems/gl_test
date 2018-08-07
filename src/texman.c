@@ -46,7 +46,7 @@ void appendTexture(struct TexMan *texman, char *name) {
     }
 
     // init texture struct variables
-    newtex->name = malloc(strlen(name));
+    newtex->name = malloc(strlen(name) + 1);
     strcpy(newtex->name, name);
     newtex->id = loadTexture(name);
 

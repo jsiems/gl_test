@@ -73,6 +73,7 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
             printf("error reading texture name \n");
             exit(1);
         }
+        name[name_len] = '\0';
         // load texture
         newmesh.texture = getTextureId(texman, name);
         // TODO: allow spec map to be passed in with function
