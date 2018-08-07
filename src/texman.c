@@ -65,8 +65,6 @@ void appendTexture(struct TexMan *texman, char *name) {
 // ********** public functions **********
 
 unsigned int getTextureId(struct TexMan *texman, char *name) {
-    printf("loading texture %s\n", name);
-    
     uint8_t found = 0;
     struct Texture *current = texman->head;
     // check if the texture has already been loaded

@@ -4,7 +4,7 @@
 #include "model.h"
 
 int main() {
-    printf("hello there\n");
+    printf("test running\n");
 
     struct TexMan texman;
     initTexMan(&texman);
@@ -12,11 +12,10 @@ int main() {
     struct Model model;
     initializeModel(&model, &texman, "house");
 
-    printf("after initing model\n");
-
-
     destroyTexMan(&texman);
     destroyModel(&model);
+
+    printf("done, test passed?\n");
 
     return 0;
 }
