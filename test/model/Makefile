@@ -2,11 +2,11 @@
 
 LDIR=-L../../lib -I../../lib
 
-#LIBS= -lglfw3 -lgdi32 -lopengl32
+LIBS= -lglfw3 -lgdi32 -lopengl32
 
 IDIR =../../src
 CC=gcc
-CFLAGS=-Wall -g -I$(IDIR) $(LDIR) $(LIBS)
+CFLAGS=-Wall -msse3 -g -I$(IDIR) $(LDIR) $(LIBS)
 
 # hide .o files in obj directory
 ODIR=../../obj
