@@ -17,7 +17,7 @@ unsigned int loadTexture(char *name) {
     int image_width, image_height, nr_channels;
     unsigned int texture;
 
-    /*glGenTextures(1, &texture);
+    glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -30,7 +30,7 @@ unsigned int loadTexture(char *name) {
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
     glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image_data);*/texture = 0;
+    stbi_image_free(image_data);
     
     free(texname);
 

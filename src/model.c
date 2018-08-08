@@ -99,20 +99,20 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
 
         // generate buffer and array objects
         unsigned int VAO, VBO;
-        /*glGenVertexArrays(1, &VAO);
+        glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glBindVertexArray(VAO);
-        glBinderBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, num_verts * FPV * sizeof(float), verts, GL_STATIC_DRAW);
 
         // vertex buffer attributes
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, FPV * sizeof(float), (void*)0);
-        glEnableVertexAttribPointer(0);
+        glEnableVertexAttribArray(0);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, FPV * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, FPV * sizeof(float), (void*)(6 * sizeof(float)));
 
-        glBindVertexArray(0);*/VAO = 0; VBO = 0;
+        glBindVertexArray(0);
 
         free(verts);
         newmesh.VAO = VAO;
@@ -127,7 +127,7 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
 void drawMeshes(struct Mesh *mesh, struct Shader *shader, 
                int amount, vec3 *positions, vec3 *rotations, vec3 *scales) {
     //bind active textures
-    /*glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mesh->texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, mesh->texture_spec_map);
@@ -152,7 +152,7 @@ void drawMeshes(struct Mesh *mesh, struct Shader *shader,
         glDrawArrays(GL_TRIANGLES, 0, mesh->num_verts);
     }
 
-    glBindVertexArray(0);*/
+    glBindVertexArray(0);
 
     return;
 }

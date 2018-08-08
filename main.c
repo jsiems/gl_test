@@ -80,22 +80,16 @@ int main() {
 
 
     vec3 cubes[] = {
-        { 0.0f,  0.0f,  0.0f},
-        { 1.0f,  0.0f,  0.0f},
-        { 2.0f,  0.0f,  0.0f},
-        { 3.0f,  0.0f,  0.0f},
-        { 4.0f,  1.0f,  0.0f},
-        { 5.0f,  2.0f,  0.0f},
-        { 6.0f,  3.0f,  0.0f},
-        { 7.0f,  4.0f, 0.0f},
-        { 8.0f,  5.0f, -1.0f},
-        { 9.0f,  6.0f, -2.0f},
-        { 10.0f,  7.0f, -3.0f},
-        { 11.0f,  8.0f, -4.0f}
+        { 0.0f,  0.0f,  0.0f}
     };
 
-    vec3 rotations[12];
-    vec3 scales[12];
+    vec3 rotations[] = {
+        { 0.0f, 0.0f, 0.0f}
+    };
+
+    vec3 scales[] = {
+        { 1.0f, 1.0f, 1.0f }
+    };
 
     vec3 point_lights[] = {
         { 0.7f,  0.2f,  2.0f},
@@ -133,49 +127,14 @@ int main() {
 
         updateDefaultUniforms(&shader, &cam, 4, point_lights, flashlight_on);
 
-        // this is an awful way to accomplish this
-        for(int i = 0; i < 12; i ++) {
-            //set rotations and scales
-            rotations[i][0] = 0.0f;
-            rotations[i][1] = 0.0f;
-            rotations[i][2] = 0.0f;
-            scales[i][0] = 1.0f;
-            scales[i][1] = 1.0f;
-            scales[i][2] = 1.0f;
-            float rot = 3.14f / 4.0f * glfwGetTime();
-            float scale = 0.5f * sin(glfwGetTime()) + 0.5;
-            switch(i) {
-                case 4:
-                case 5:
-                case 6:
-                    rotations[i][i - 4] = rot;
-                break;
-                case 7:
-                    rotations[i][0] = rot;
-                    rotations[i][1] = rot;
-                    rotations[i][2] = rot;
-                break;
-                case 8:
-                case 9:
-                case 10:
-                    scales[i][i - 8] = scale;
-                break;
-                case 11:
-                    scales[i][0] = scale;
-                    scales[i][1] = scale;
-                    scales[i][2] = scale;
-                break;
-            }
-        }
-
-        drawModels(&crate, &shader, 12, cubes, rotations, scales);
+        drawModels(&crate, &shader, 1, cubes, rotations, scales);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     destroyModel(&crate);
-    destroyTexMan(&texman)
+    destroyTexMan(&texman);
 
     printf("End of program\n\tframes: %I64d\n\tTime: %f\n\tFPS: %f", total_frames, glfwGetTime() - start_time, total_frames / (glfwGetTime() - start_time));
 
