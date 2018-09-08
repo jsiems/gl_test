@@ -47,6 +47,8 @@ uint8_t t_pressed = 0;
 struct Camera cam;
 
 int main() {
+    printf("running!\n");
+    fflush(stdout);
     //initialize window
     GLFWwindow *window = initializeWindow();
     //load the opengl library
@@ -126,6 +128,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         updateDefaultUniforms(&shader, &cam, 4, point_lights, flashlight_on);
+
+        rotations[0][0] = 3.14f / 4.0f * glfwGetTime();
 
         drawModels(&crate, &shader, 1, cubes, rotations, scales);
 

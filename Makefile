@@ -4,7 +4,7 @@
 LDIR=-Llib -Ilib
 
 # libraries
-LIBS= -lglfw3 -lgdi32 -lopengl32
+LIBS= -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lXxf86vm -lXinerama -lXcursor -lrt
 
 IDIR=src
 CC=gcc
