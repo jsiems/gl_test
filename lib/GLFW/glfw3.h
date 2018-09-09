@@ -973,6 +973,10 @@ extern "C" {
  *  [attribute](@ref GLFW_CLIENT_API_attrib).
  */
 #define GLFW_CONTEXT_CREATION_API   0x0002200B
+/*! @brief Window content area scaling window
+ *  [window hint](@ref GLFW_SCALE_TO_MONITOR).
+ */
+#define GLFW_SCALE_TO_MONITOR       0x0002200C
 
 #define GLFW_COCOA_RETINA_FRAMEBUFFER 0x00023001
 #define GLFW_COCOA_FRAME_NAME         0x00023002
@@ -4011,8 +4015,8 @@ GLFWAPI int glfwGetKey(GLFWwindow* window, int key);
  *  `GLFW_RELEASE`.
  *
  *  If the @ref GLFW_STICKY_MOUSE_BUTTONS input mode is enabled, this function
- *  `GLFW_PRESS` the first time you call it for a mouse button that was pressed,
- *  even if that mouse button has already been released.
+ *  returns `GLFW_PRESS` the first time you call it for a mouse button that was
+ *  pressed, even if that mouse button has already been released.
  *
  *  @param[in] window The desired window.
  *  @param[in] button The desired [mouse button](@ref buttons).

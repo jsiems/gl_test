@@ -4,7 +4,13 @@
 LDIR=-Llib -Ilib
 
 # libraries
-LIBS= -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lXxf86vm -lXinerama -lXcursor -lrt
+ifdef SYSTEMROOT
+	#windows libraries
+	LIBS= -lglfw3_win -lgdi32 -lopengl32
+else
+	#linux libraries
+	LIBS= -lglfw3_linux -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lm -lXxf86vm -lXinerama -lXcursor -lrt
+endif
 
 IDIR=src
 CC=gcc
