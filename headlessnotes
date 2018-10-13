@@ -33,37 +33,16 @@ explation:
 last argument is the name of the output file
 
 
-streaming notes, what I have gathered so far:
-1. shaka player for actually playing the content on the website
-2. point shaka to a MPEG-DASH .mpd file
-3. .mpd file is justa file describing how all the files fit together, etc...
-4. 
-
-OR you can use the HLS format, not sure what the difference is exactly
-HLS is designed by apple... makes me hesitate. I'll pass.
-
-new thing for playing it: (looks easier) dash.js (https://github.com/Dash-Industry-Forum/dash.js)
-
-use ffmpeg and MP4BOX to create dash files???
-maybe use ffmpeg instead of avconv
-
-current avconv command:
-avconv -f x11grab -r 25 -s 800x600 -i :99.0 -vcodec libx264 -threads 4 -f segment -segment_time 5 ./test%01d.mp4
-
-check out this guide to streaming video:
-https://developers.google.com/web/fundamentals/media/mse/basics
-
-
-latest ffmpeg command:
-ffmpeg -f x11grab -r 25 -s 800x600 -i :99.0 -vcodec libx264 -threads 4 -f segment -segment_time 2 -segment_wrap 4 -break_non_keyframes 1 ./test%01d.mp4
-
-
-
-## ffmpeg with 2 second clips that actually look good: 
-## to change clip length, change the 2 in segment_time and in force_key_frames
-ffmpeg -f x11grab -r 20 -s 800x600 -i :99.0 -vcodec libx264 -threads 4 -f segment -segment_time 2 -segment_wrap 4 -force_key_frames "expr:gte(t,n_forced*2)" ./test%01d.mp4
-
 Some good info:
 https://stackoverflow.com/questions/24102075/mediasource-error-this-sourcebuffer-has-been-removed-from-the-parent-media-sour
+
+
+command that actually worked:
+but it was a very long segment.
+ffmpeg -f x11grab -r 20 -s 800x600 -i :99.0 -vcodec libx264 -threads 4 -movflags empty_moov+default_base_moof+frag_keyframe -probesize 2000000 ./test0.mp4
+
+actual JS for command:
+var child = spawn("ffmpeg",  ["-f", "x11grab", "-r", "15", "-s", "800x600", "-i", ":99.0", "-vcodec", "libx264", "-threads", "4", "-movflags", "empty_moov+default_base_moof+frag_keyframe", "-probesize", "200000", "-f", "mp4", "-reset_timestamps", "1", "-force_key_frames", "expr:gte(t,n_forced*0.5)", "-"]);
+
 
 
