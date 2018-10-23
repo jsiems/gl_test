@@ -46,3 +46,11 @@ var child = spawn("ffmpeg",  ["-f", "x11grab", "-r", "15", "-s", "800x600", "-i"
 
 
 
+        var child = spawn("ffmpeg",  ["-f", "x11grab", "-r", "" + FR, "-s", "800x600",
+            "-i", ":99.0", "-vcodec", "libx264", "-threads", "" + THREADS, "-movflags",
+            "empty_moov+default_base_moof+frag_keyframe", "-probesize", "" + PROBESIZE,
+            "-f", "mp4", "-g", "1", /*"-reset_timestamps", "1", "-force_key_frames", 
+            "expr:gte(t,n_forced*0.125)",*/ "-"]);
+
+
+
