@@ -6,11 +6,14 @@
 unsigned int loadTexture(char *name) {
     // create name path
     // e.g. textures/name.png
+    printf("file name input: %s\n", name);
     int name_len = strlen(name);
+    // might need to reverse \\ on linux
+    char *name_loc = strrchr(name, '\\') + 1;
     char *texname = malloc(name_len + 20);
     texname[name_len] = '\0';
     strcpy(texname, "textures/\0");
-    strcat(texname, name);
+    strcat(texname, name_loc);
     strcat(texname, ".png\0");
 
     unsigned char *image_data;

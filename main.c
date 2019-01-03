@@ -101,7 +101,7 @@ int main() {
     };
 
     struct Model crate;
-    initializeModel(&crate, &texman, "house");
+    initializeModel(&crate, &texman, "crate");
 
     //keep track of FPS
     uint64_t total_frames = 0;

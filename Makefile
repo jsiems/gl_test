@@ -14,7 +14,7 @@ endif
 
 IDIR=src
 CC=gcc
-CFLAGS=-Wall -msse3 -I$(IDIR) $(LDIR) $(LIBS)
+CFLAGS=-Wall -msse3 -g -I$(IDIR) $(LDIR) $(LIBS)
 
 # hide .o files in obj directory
 ODIR=obj
