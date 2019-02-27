@@ -12,6 +12,7 @@
 #include "camera.h"
 #include "model.h"
 #include "texman.h"
+#include "dirfuncs.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
@@ -20,7 +21,7 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-#define FPS_LIMIT 60.0f
+#define FPS_LIMIT 144.0f
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, struct Camera *cam);
@@ -48,7 +49,17 @@ struct Camera cam;
 
 int main() {
     printf("running!\n");
-    fflush(stdout);
+
+    //findfile test
+    char *full_path;
+    printDirectory("./textures");
+    full_path = findFile("./textures", "car.png");
+
+    if(full_path != 0) {
+        printf("found car.png: %s\n", full_path);
+        free(full_path);
+    }
+
     //initialize window
     GLFWwindow *window = initializeWindow();
     //load the opengl library
@@ -129,7 +140,7 @@ int main() {
 
         updateDefaultUniforms(&shader, &cam, 4, point_lights, flashlight_on);
 
-        rotations[0][0] = 3.14f / 4.0f * glfwGetTime();
+        rotations[0][1] = 3.14f / 4.0f * glfwGetTime();
 
         drawModels(&crate, &shader, 1, cubes, rotations, scales);
 

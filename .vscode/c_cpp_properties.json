@@ -66,7 +66,9 @@
                 "${workspaceFolder}",
                 "${workspaceFolder}/include",
                 "C:\\MinGW\\include",
-                "C:\\MinGW\\lib\\gcc\\mingw32\\6.3.0\\include"
+                "C:\\MinGW\\lib\\gcc\\mingw32\\6.3.0\\include",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/lib"
             ],
             "defines": [
                 "_DEBUG",
