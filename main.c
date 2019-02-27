@@ -50,16 +50,6 @@ struct Camera cam;
 int main() {
     printf("running!\n");
 
-    //findfile test
-    char *full_path;
-    printDirectory("./textures");
-    full_path = findFile("./textures", "car.png");
-
-    if(full_path != 0) {
-        printf("found car.png: %s\n", full_path);
-        free(full_path);
-    }
-
     //initialize window
     GLFWwindow *window = initializeWindow();
     //load the opengl library
@@ -112,7 +102,7 @@ int main() {
     };
 
     struct Model crate;
-    initializeModel(&crate, &texman, "house");
+    initializeModel(&crate, &texman, "nanosuit");
 
     //keep track of FPS
     uint64_t total_frames = 0;

@@ -65,7 +65,7 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
     for(int i = 0; i < num_meshes; i ++) {
         struct Mesh newmesh;
 
-        // read texture name
+        // read texture name and load texture
         int name_len;
         fread(&name_len, sizeof(name_len), 1, file);
         char *name = malloc(name_len + 1);
@@ -74,11 +74,12 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
             exit(1);
         }
         name[name_len] = '\0';
-        // load texture
         newmesh.texture = getTextureId(texman, name);
-        // TODO: allow spec map to be passed in with function
-        //       or a part of the .vrt
-        // load spec map
+
+        // check if spec map available
+        // read spec map name and load spec map (if it exists)
+        // TODO: If spec_map size is 0, change to check for name_spec.png
+        // TODO: Create texture not found texture
         char *specname = malloc(name_len + 7);
         strcpy(specname, name);
         specname[name_len] = '\0';

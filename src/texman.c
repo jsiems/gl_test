@@ -3,7 +3,7 @@
 
 // ********** private functions **********
 
-unsigned int loadTexture(char *name) {
+int loadTexture(char *name) {
     // create name path
     // e.g. textures/name.png
     int name_len = strlen(name);
@@ -26,7 +26,7 @@ unsigned int loadTexture(char *name) {
     image_data = stbi_load(texname, &image_width, &image_height, &nr_channels, 0);
     if(image_data == NULL) {
         printf("Failed to load texture %s\n", texname);
-        exit(1);
+        return -1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -37,7 +37,7 @@ unsigned int loadTexture(char *name) {
     return texture;
 }
 
-void appendTexture(struct TexMan *texman, char *name) {
+int appendTexture(struct TexMan *texman, char *name) {
     // allocate memory for the next texture
     struct Texture *newtex = malloc(sizeof(*newtex));
     if(newtex == 0) {
@@ -50,6 +50,12 @@ void appendTexture(struct TexMan *texman, char *name) {
     strcpy(newtex->name, name);
     newtex->id = loadTexture(name);
 
+    if(newtex->id == -1) {
+        free(newtex->name);
+        free(newtex);
+        return -1;
+    }
+
     // add the texture to the list
     if(texman->head == 0) {
         texman->head = newtex;
@@ -60,11 +66,13 @@ void appendTexture(struct TexMan *texman, char *name) {
         texman->tail = newtex;
     }
     newtex->next = 0;
+
+    return 0;
 }
 
 // ********** public functions **********
 
-unsigned int getTextureId(struct TexMan *texman, char *name) {
+int getTextureId(struct TexMan *texman, char *name) {
     uint8_t found = 0;
     struct Texture *current = texman->head;
     // check if the texture has already been loaded
@@ -78,7 +86,10 @@ unsigned int getTextureId(struct TexMan *texman, char *name) {
 
     // load texture if it has not been loaded
     if(!found) {
-        appendTexture(texman, name);
+        // Attempt to load texture. If it cannot be loaded, return -1
+        if(appendTexture(texman, name) == -1) {
+            return -1;
+        }
         current = texman->tail;
     }
 

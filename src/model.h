@@ -26,13 +26,6 @@
 
 #define FPV 8
 
-// TODO: cache textures incase other models use the same texture.
-// This will increase loading times. Maybe create a texture manager
-// file
-
-// TODO: Probably should do dynamic allocation for the filenames
-// in case i ever have very long filenames
-
 struct Model {
     struct Mesh *meshes;
     int num_meshes;
@@ -42,8 +35,8 @@ struct Mesh {
     unsigned int VAO;
     unsigned int VBO;
     unsigned int num_verts;
-    unsigned int texture;
-    unsigned int texture_spec_map;
+    unsigned int texture;           // int points to texture in texman
+    unsigned int texture_spec_map;  // same
 };
 
 //will load all textures, vertex data, buffer the data

@@ -23,7 +23,10 @@ struct TexMan {
 
 void initTexMan(struct TexMan *texman);
 
-unsigned int getTextureId(struct TexMan *texman, char *name);
+// Searches for texture in list of textures and returns id
+// if texture attempts to load texture
+// if texture cannot be loaded, returns -1
+int getTextureId(struct TexMan *texman, char *name);
 
 void destroyTexMan(struct TexMan *texman);
 

@@ -277,17 +277,37 @@ void convertWavefront(const char *objfn) {
         struct Mesh *mesh = (struct Mesh *)current_mesh->data;
         struct Material *mat = mesh->mat;
 
-        char *texname = malloc(sizeof(*texname) * (strlen(mat->texture_name) + 1));
-        strcpy(texname, mat->texture_name);
-        int index = strrchr(texname, '.') - texname;
-        texname[index] = '\0';
+        // find and write the full path to the texture
+        char *tex_file_name = malloc(strlen(mat->texture_name) + 1);
+        strcpy(tex_file_name, mat->texture_name);
+        char *tex_file_path = findFile("./textures", tex_file_name);
+        int size = 0;
+        if(tex_file_path == 0) {
+            printf("WFC ERROR: Cannot find path for texture %s\n", tex_file_name);
+            fwrite(&size, sizeof(size), 1, output_file);
+        }
+        else {
+            // remove the .png
+            int index = strrchr(tex_file_path, '.') - tex_file_path;
+            tex_file_path[index] = '\0';
 
-        // write sixe of texture name
-        int size = strlen(texname);
-        fwrite(&size, sizeof(size), 1, output_file);
-        //write the texture name (NO EXTENSION)
-        fwrite(texname, sizeof(*texname), size, output_file);
-        free(texname);
+            size = strlen(tex_file_path) - strlen("textures/");
+            fwrite(&size, sizeof(size), 1, output_file);
+            fwrite(tex_file_path + strlen("textures/"), sizeof(*tex_file_path), size, output_file);
+        }
+        // OK to free both here even if one is null, because nothing happens
+        // when freeing a null pointer.
+        free(tex_file_name);
+        free(tex_file_path);
+
+        // TODO: 
+        // Figure out something to do when more than one texture have
+        // the same name in different subfolders (which one to use??)
+
+        // TODO:
+        // same thing for texture spec map
+        // if it is not specified in the .mat file,
+        // should search for name_spec.png and use that
 
         // write number of vertices in this mesh
         // each index has 3 vertices, hence the * 3

@@ -35,7 +35,6 @@ $(ODIR)/%.o: %.c $(DEPS)
 main: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
 
-
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ models/**/*.vrt
 
