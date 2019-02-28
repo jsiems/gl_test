@@ -12,6 +12,7 @@ struct Mesh {
 struct Material {
     char *name;
     char *texture_name;
+    char *spec_name;
 };
 
 struct List {
@@ -115,11 +116,15 @@ void convertWavefront(const char *objfn) {
     // might need to increase size of a single line someday
     char line[256];
 
+    // TODO: I ignore a lot of the material options, like  ka, kd, ks, etc. 
+    // Should probably read those in also?
     while(fscanf(matfile, "%s", line) != -1) {
         if(strcmp(line, "newmtl") == 0) {
             fscanf(matfile, "%s", line);
             struct Material *newmat = malloc(sizeof(struct Material));
             newmat->name = malloc(sizeof(*newmat->name) * (strlen(line) + 1));
+            newmat->texture_name = 0;
+            newmat->spec_name = 0;
             strcpy(newmat->name, line);
 
             pushData(materials, (void *)newmat);
@@ -127,11 +132,21 @@ void convertWavefront(const char *objfn) {
             continue;
         }
 
+        // texture file
         if(strcmp(line, "map_Kd") == 0) {
             fscanf(matfile, "%s", line);
             struct Material *mat = (struct Material *)materials->tail->data;
             mat->texture_name = malloc(sizeof(*mat->texture_name) * (strlen(line) + 1));
             strcpy(mat->texture_name, line);
+            continue;
+        }
+
+        // spec_map file
+        if(strcmp(line, "map_Ks") == 0) {
+            fscanf(matfile, "%s", line);
+            struct Material *mat = (struct Material *)materials->tail->data;
+            mat->spec_name = malloc(sizeof(*mat->spec_name) * (strlen(line) + 1));
+            strcpy(mat->spec_name, line);
             continue;
         }
 
@@ -240,7 +255,7 @@ void convertWavefront(const char *objfn) {
             continue;
         }
 
-        // ignore (maybe add more line headers in future)
+        // ignore other lines (maybe add more line headers in future)
         fgets(line, 100, objfile);
     }
 
@@ -278,12 +293,10 @@ void convertWavefront(const char *objfn) {
         struct Material *mat = mesh->mat;
 
         // find and write the full path to the texture
-        char *tex_file_name = malloc(strlen(mat->texture_name) + 1);
-        strcpy(tex_file_name, mat->texture_name);
-        char *tex_file_path = findFile("./textures", tex_file_name);
+        char *tex_file_path = findFile("./textures", mat->texture_name);
         int size = 0;
         if(tex_file_path == 0) {
-            printf("WFC ERROR: Cannot find path for texture %s\n", tex_file_name);
+            printf("WFC ERROR: Cannot find path for texture: %s\n", mat->texture_name);
             fwrite(&size, sizeof(size), 1, output_file);
         }
         else {
@@ -295,19 +308,44 @@ void convertWavefront(const char *objfn) {
             fwrite(&size, sizeof(size), 1, output_file);
             fwrite(tex_file_path + strlen("textures/"), sizeof(*tex_file_path), size, output_file);
         }
-        // OK to free both here even if one is null, because nothing happens
+        // OK to free here even if null, because nothing happens
         // when freeing a null pointer.
-        free(tex_file_name);
         free(tex_file_path);
 
         // TODO: 
         // Figure out something to do when more than one texture have
         // the same name in different subfolders (which one to use??)
 
-        // TODO:
-        // same thing for texture spec map
-        // if it is not specified in the .mat file,
-        // should search for name_spec.png and use that
+        // write spec name if it is in the material
+        char *spec_file_path;
+        if(mat->spec_name != 0) {
+            spec_file_path = findFile("./textures", mat->spec_name);
+        }
+        else {
+            // spec name is not specified in .mat file, try to find matname_spec.png
+            char *spec_file_name = malloc(strlen(mat->name) + 10);
+            strcpy(spec_file_name, mat->name);
+            strcat(spec_file_name, "_spec.png\0");
+            spec_file_path = findFile("./textures", spec_file_name);
+        }
+
+        // find path to the file
+        size = 0;
+        if(spec_file_path == 0) {
+            printf("WFC ERROR: Cannot find path for spec file for material: %s\n", mat->name);
+            fwrite(&size, sizeof(size), 1, output_file);
+        }
+        else {
+            // remove the .png
+            int index = strrchr(spec_file_path, '.') - spec_file_path;
+            spec_file_path[index] = '\0';
+
+            size = strlen(spec_file_path) - strlen("textures/");
+            fwrite(&size, sizeof(size), 1, output_file);
+            fwrite(spec_file_path + strlen("textures/"), sizeof(*spec_file_path), size, output_file);
+        }
+        // Again, ok to free even if it is 0
+        free(spec_file_path);
 
         // write number of vertices in this mesh
         // each index has 3 vertices, hence the * 3
@@ -339,6 +377,7 @@ void convertWavefront(const char *objfn) {
         struct Material *mat = (struct Material *)current->data;
         free(mat->name);
         free(mat->texture_name);
+        free(mat->spec_name);
         current = current->next;
     }
 

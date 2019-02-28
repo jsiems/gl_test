@@ -68,26 +68,33 @@ void initializeModel(struct Model *model, struct TexMan *texman, char *modelname
         // read texture name and load texture
         int name_len;
         fread(&name_len, sizeof(name_len), 1, file);
-        char *name = malloc(name_len + 1);
-        if( fread(name, sizeof(*name), name_len, file) != name_len) {
-            printf("error reading texture name \n");
-            exit(1);
+        if(name_len > 0) {
+            char *texname = malloc(name_len + 1);
+            if( fread(texname, sizeof(*texname), name_len, file) != name_len) {
+                printf("INIT MODEL ERROR: cannot read texture name \n");
+            }
+            else {
+                texname[name_len] = '\0';
+                newmesh.texture = getTextureId(texman, texname);
+            }
+            free(texname);
         }
-        name[name_len] = '\0';
-        newmesh.texture = getTextureId(texman, name);
 
-        // check if spec map available
-        // read spec map name and load spec map (if it exists)
-        // TODO: If spec_map size is 0, change to check for name_spec.png
+        // read spec_name and load spec map
         // TODO: Create texture not found texture
-        char *specname = malloc(name_len + 7);
-        strcpy(specname, name);
-        specname[name_len] = '\0';
-        strcat(specname, "_spec\0");
-        newmesh.texture_spec_map = getTextureId(texman, specname);
-        // free texture name strings
-        free(name);
-        free(specname);
+        int spec_len;
+        fread(&spec_len, sizeof(spec_len), 1, file);
+        if(spec_len > 0) {
+            char *specname = malloc(spec_len + 1);
+            if( fread(specname, sizeof(*specname), spec_len, file) != spec_len) {
+                printf("INIT MODEL ERROR: cannot read spec name \n");
+            }
+            else {
+                specname[spec_len] = '\0';
+                newmesh.texture_spec_map = getTextureId(texman, specname);
+            }
+            free(specname);
+        }
 
         // read number of vertices
         int num_verts;
