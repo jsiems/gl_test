@@ -19,10 +19,10 @@ CFLAGS=-Wall -msse3 -g -I$(IDIR) $(LDIR) $(LIBS)
 # hide .o files in obj directory
 ODIR=obj
 
-_DEPS = wfc.h camera.h model.h shader.h texman.h dirfuncs.h
+_DEPS = helper/wfc.h render/camera.h render/model.h render/shader.h render/texman.h helper/dirfuncs.h helper/easing.h render/text.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o wfc.o shader.o model.o glad.o camera.o texman.o dirfuncs.o
+_OBJ = main.o helper/wfc.o render/shader.o render/model.o render/glad.o render/camera.o render/texman.o helper/dirfuncs.o helper/easing.o render/text.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 # tells make to check include directory for dependencies
@@ -37,4 +37,5 @@ main: $(OBJ)
 
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ models/**/*.vrt
+	find ./$(ODIR) -name "*.o" -delete
 

@@ -8,20 +8,16 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
-#include "shader.h"
-#include "camera.h"
-#include "model.h"
-#include "texman.h"
-#include "dirfuncs.h"
+#include "render/shader.h"
+#include "render/camera.h"
+#include "render/model.h"
+#include "render/texman.h"
+#include "helper/dirfuncs.h"
+#include "const.h"
 
 //macros
 #define degToRad(deg) ((deg) * M_PI / 180.0)
 #define radToDeg(rad) ((rad) * 180.0 / M_PI)
-
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-
-#define FPS_LIMIT 144.0f
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window, struct Camera *cam);
